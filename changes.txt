@@ -1,0 +1,26 @@
+2006/05/17 - Version 0.3
+------------------------------
+- requires Sakai 2.2.x or greater
+
+2006/05/16 - Version 0.2.3
+------------------------------
+- switch to hibernate3 and to use of AdditionalHibernateMappingsImpl method
+- performance improvement (thanks to Stephen Marquard)
+
+2006/05/08 - Version 0.2.2
+------------------------------
+- user id and name splitted in two columns - UI and exported files (XLS and CSV)
+- updated custom patches to SAK-4120 to filter pages accessed from webservices
+- check permissions when accessing with tool direct URL
+- fixed CSS inclusion leading to invalid html
+
+2006/04/09 - Version 0.2.1
+--------------------------
+- fixed spelling correction: Assignments submitted
+- added missing license headers to java files
+
+2006/04/03 - Version 0.2
+--------------------------
+- fixed date bugs
+- added bar chart for current week
+- added support for HSQLDB (tested) and Oracle (not tested)

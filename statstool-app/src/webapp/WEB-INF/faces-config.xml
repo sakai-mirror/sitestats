@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE faces-config PUBLIC
+  "-//Sun Microsystems, Inc.//DTD JavaServer Faces Config 1.0//EN"
+  "http://java.sun.com/dtd/web-facesconfig_1_0.dtd">
+
+<!-- =========== FACES CONFIGURATION FILE ================================== -->
+
+<faces-config>
+    
+	<application>
+		<message-bundle>edu.ufp.sakai.tool.statstool.bundle.Messages</message-bundle>
+    	<locale-config>
+      		<default-locale>en</default-locale>
+		</locale-config>
+	</application>
+	<managed-bean>
+		<description>
+			Dynamic Resource Bundle Loader
+		</description>
+		<managed-bean-name>msgs</managed-bean-name>
+		<managed-bean-class>org.sakaiproject.util.ResourceLoader</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<description>Bundle baseName</description>
+			<property-name>baseName</property-name>
+			<value>edu.ufp.sakai.tool.statstool.bundle.Messages</value>
+		</managed-property>
+	</managed-bean>
+
+
+
+  <!-- =================== Tool Beans ============== -->
+
+	<managed-bean>
+		<description>Menu Bean</description>
+		<managed-bean-name>MenuBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.MenuBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Site List Bean</description>
+		<managed-bean-name>SiteListBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.SiteListBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Overview Bean</description>
+		<managed-bean-name>OverviewBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.OverviewBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Events Bean</description>
+		<managed-bean-name>EventsBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.EventsBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Resources Bean</description>
+		<managed-bean-name>ResourcesBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.ResourcesBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Preferences Bean</description>
+		<managed-bean-name>PrefsBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.PrefsBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	<managed-bean>
+		<description>Base Bean</description>
+		<managed-bean-name>BaseBean</managed-bean-name>
+		<managed-bean-class>edu.ufp.sakai.tool.statstool.ui.BaseBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+	</managed-bean>
+	
+	<!-- 
+  	<component>
+	   <component-type>edu.ufp.sakai.jsf.Chart</component-type>
+	   <component-class>edu.ufp.sakai.jsf.ChartComponent</component-class>
+	</component>
+	-->
+	
+  	<component>
+	   <component-type>edu.ufp.sakai.jsf.VBarChart</component-type>
+	   <component-class>edu.ufp.sakai.jsf.VBarChartComponent</component-class>
+	</component>
+
+	
+	<render-kit>
+        <renderer>
+            <component-family>javax.faces.Command</component-family>
+            <renderer-type>org.apache.myfaces.SortHeader</renderer-type>
+            <renderer-class>edu.ufp.sakai.tool.statstool.jsf.HtmlSortHeaderRenderer</renderer-class>
+        </renderer>
+    </render-kit>
+
+	<navigation-rule>
+          <from-view-id>/sitestats/*</from-view-id>
+
+          <navigation-case>
+            <from-outcome>sitelist</from-outcome>
+            <to-view-id>/sitestats/sitelist.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>overview</from-outcome>
+            <to-view-id>/sitestats/overview.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>users</from-outcome>
+            <to-view-id>/sitestats/users.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>events</from-outcome>
+            <to-view-id>/sitestats/events.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>resources</from-outcome>
+            <to-view-id>/sitestats/resources.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>prefs</from-outcome>
+            <to-view-id>/sitestats/prefs.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+
+          <navigation-case>
+            <from-outcome>unauthorized</from-outcome>
+            <to-view-id>/sitestats/unauthorized.jsp</to-view-id>
+            <redirect/>
+          </navigation-case>
+    </navigation-rule>
+
+</faces-config>

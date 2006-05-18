@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<bean id="sitestats-additional-mappings"
+		class="org.sakaiproject.springframework.orm.hibernate.impl.AdditionalHibernateMappingsImpl">
+		<property name="mappingResources">
+			<list>
+				<value>
+					edu/ufp/sakai/tool/statstool/app/PrefsEntryImpl.hbm.xml
+				</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="edu.ufp.sakai.tool.statstool.api.StatsManager"
+		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">		
+		<property name="transactionManager">
+			<ref bean="org.sakaiproject.springframework.orm.hibernate.GlobalTransactionManager" />
+		</property>
+		<property name="target">
+			<bean class="edu.ufp.sakai.tool.statstool.app.StatsManagerImpl" singleton="true">
+				<property name="sessionFactory">
+					<ref bean="org.sakaiproject.springframework.orm.hibernate.GlobalSessionFactory" />
+				</property>
+				<property name="events">
+					<props>
+						<prop key="pres.begin">Visits</prop>
+						<prop key="mail.new">New mail</prop>
+						<prop key="chat.new">New chat</prop>
+						<prop key="disc.new">New discussion</prop>
+						<prop key="content.read">Content read</prop>
+						<prop key="asn.submit.submission">Assignments submitted</prop>
+						<prop key="asn.save.submission">Assignments saved</prop>
+					</props>
+				</property>
+				<property name="showAdminEvents">
+					<value>false</value>
+				</property>
+			</bean>
+		</property>
+		<property name="transactionAttributes">
+			<props>
+				<prop key="*">PROPAGATION_REQUIRED</prop>
+			</props>
+		</property>
+	</bean>
+
+	<bean id="edu.ufp.sakai.tool.statstool.api.StatsEntry"
+		class="edu.ufp.sakai.tool.statstool.app.StatsEntryImpl">
+	</bean>
+
+	<bean id="edu.ufp.sakai.tool.statstool.api.PrefsEntry"
+		class="edu.ufp.sakai.tool.statstool.app.PrefsEntryImpl">
+	</bean>
+
+	<!-- 
+		<bean id="siteStatsSessionFactory" parent="org.sakaiproject.springframework.orm.hibernate.SessionFactoryBase">
+		<property name="mappingResources">
+		<list>
+		<value>edu/ufp/sakai/tool/statstool/app/PrefsEntryImpl.hbm.xml</value>
+		</list>
+		</property>
+		</bean>
+		
+		<bean id="siteStatsTransactionManager" class="org.springframework.orm.hibernate.HibernateTransactionManager">
+		<property name="sessionFactory">
+		<ref bean="siteStatsSessionFactory" />
+		</property>
+		</bean>
+		
+		<bean id="edu.ufp.sakai.tool.statstool.api.StatsManager"
+		class="edu.ufp.sakai.tool.statstool.app.StatsManagerImpl"
+		singleton="true">
+		<property name="events">
+		<props>
+		<prop key="pres.begin">Visits</prop>
+		<prop key="mail.new">New mail</prop>
+		<prop key="chat.new">New chat</prop>
+		<prop key="disc.new">New discussion</prop>
+		<prop key="content.read">Content read</prop>
+		<prop key="asn.submit.submission">Assignments submitted</prop>
+		<prop key="asn.save.submission">Assignments saved</prop>
+		</props>
+		</property>
+		<property name="showAdminEvents">
+		<value>false</value>
+		</property>
+		<property name="sessionFactory">
+		<ref bean="siteStatsSessionFactory" />
+		</property>
+		</bean>
+	-->
+</beans>

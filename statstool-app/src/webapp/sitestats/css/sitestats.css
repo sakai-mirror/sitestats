@@ -1,0 +1,45 @@
+.sst {
+     vertical-align: top;
+     text-align: left;
+     width: 50%;	
+}
+.left {text-align: left;}
+.center {text-align: center;}
+.right {text-align: right;}
+.left1 {
+     vertical-align: top;
+     text-align: left;
+     width: 80%;
+}
+.right1 {
+     vertical-align: top;
+     text-align: right;
+     width: 20%;
+     /*width: 160px;*/
+}
+
+#vbartbl {
+	font: 11px verdana, arial, helvetica, sans-serif; 
+}
+#vbartbl table {
+    height: 150px; 
+	background: #ffffff url(../images/bgfade.png) repeat-x top left;
+	border: 1px solid #ECECEC;
+	margin-top: 0; 
+	margin-bottom: 0;
+}
+#vbartbl td { 
+	width: 35px;
+	border-color: #ECECEC; 
+	border-left-width: 0px; border-right-width: 1px; border-top-width: 0px; border-bottom-width: 1px; 
+	font: 11px verdana, arial, helvetica, sans-serif; text-align:center; color: #000000; }
+#vbartbl th { 
+	border-color: #ECECEC; 
+	border-left-width: 0px; border-right-width: 1px; border-top-width: 0px; border-bottom-width: 1px; 
+	padding: 1px 2px 1px 1px; 
+	font: 11px verdana, arial, helvetica, sans-serif; text-align:center; color: #000000; }
+#vbartbl .currentday { font-weight: bold; } 
+#ivbartbl table {height:0px; width:0px; background: none; margin: 0px; border:0px; padding:0px;}
+#ivbartbl td {width: 0px; font-size: 9px; margin: 0px; border:0px; padding:0px; color: #000000; }
+#ivbartbl th {margin: 0px; border:0px; padding:0px; color: #000000; }
+    
