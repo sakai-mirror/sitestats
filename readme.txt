@@ -2,27 +2,28 @@ Site Stats Tool
 --------------------------
 1. About
 2. Building/deploying
-3. Using the tool
-4. Known bugs/issues
-5. Contact
+3. Updating from previous releases
+4. Permission-sensitive pages/tools
+5. Using the tool
+6. Known bugs/issues
+7. Contact
 
 
 
 1. About
 -----------------------
 Site Stats is a tool for Sakai for showing site statistics by user, event, or resource.
-The tool’s main page shows a weekly snapshot of activity in the site and simple statistics.
+The tool’s main page shows a weekly/monthly/yearly snapshot of activity in the site 
+and simple statistics (totals and averages).
 
-For the Sakai 2.1.x releases, use Site Stats Tool 0.2.x versions.
-For the Sakai 2.2.x releases, use Site Stats Tool 0.3.x versions.
+Currently, it has an overview page with summary information about site visits, unique site
+visits and activity, an events page listing site events per user, a resources page listing
+site resources accessed by user, and a preferences page.
+There is also an administrator version of the tool, with a site list view.
 
-Currently, it has an overview page with summary information about site visits and activity,
-an events page listing site events per user, a resources page listing site resources accessed
-by user, and a preferences page.
-
-This tool is in development and is not yet optimized. Optimization will be done after gathering
-users feedback. Feel free to send suggestions to ufpuv-suporte@ufp.pt or by using the
-SiteStats JIRA section.
+This tool is still in development. Somewhere in the future, an implementation will be added
+to gather data from the new (future) Sakai Warehouse.
+Feel free to send suggestions to ufpuv-suporte@ufp.pt or by using the SiteStats JIRA section.
 
 
 2. Building / Deploying
@@ -34,30 +35,40 @@ as you link '../master' to the 'master' folder of the Sakai source tree (Sakai
 uses a master project descriptor file at '../master/project.xml').
 
 
-3. Using the Tool
+3. Updating from previous releases
+-----------------------
+  1. Undeploy previous SiteStats deployments (folder strucutre and jar/war filenames were changed)
+  2. Please run the appropriate database conversion script located in the 'updating/' folder.
+  3. Build/deploy with maven
+
+
+4. Permission-sensitive pages/tools
+-----------------------
+Sakai currently does not support permission-sensitive pages although there is already a feature request 
+for this (SAK-4120). Meanwhile, and while there is no native support for this, you can use the custom 
+solution explained in http://bugs.sakaiproject.org/confluence/display/STAT
+
+
+5. Using the Tool
 -----------------------
 Use the 'Site Info' tool to add SiteStats to a site.
-In the events and resources page, events can searched by user ID or email, filtered by groups,
+In the events and resources page, events can searched by user ID or name, filtered by groups,
 or by time period.
-The preferences page allows a user to remove or add events.
+The preferences page allows a user to select events to be displayed in Events page and to count
+as Activity in the Overview page.
  
 
-4. Known bugs/issues/limitations
+6. Known bugs/issues/limitations
 -----------------------
-Currently, it queries SAKAI_SESSION and SAKAI_EVENT once per tool page access in a user
-session and keeps data in memory. Data will only be updated in the following cases:
-    *  user logs in;
-    * reseting the tool in the title bar;
-    * changing the tool preferences;
-    * searching in Events and Resources pages (updates these pages only);
-Optimization will be implemented in a near future.
-
-As of Sakai 2.1.2, the Assignments tool has two bugs related with event logging: grading or
-releasing grades logs "asn.submit.submission" (the same event that is logged when an user
-performs an assignment submission).
+- Assignments tool: SAK-4315: When grading in Assignments, 'asn.submit.submission' events are logged to SAKAI_EVENT
+instead of 'asn.grade.submission' (FIXED in r11229);
+- Email archive: unable to process email attachments (no reference to site id);
+- Discussion tool: SAK-5340: Category related events are always logged as 'disc.null' (FIXED in r11194);
+- Message Center: SAK-5341: Events logged should have unique ID and normalized reference;
+- SiteStats is not cluster-aware (yet);
 
 
-5. Contact
+7. Contact
 -----------------------
 SiteStats is written by Nuno Fernandes at Universidade Fernando Pessoa.
 If you wish, feel free to submit patches or any other contributions.
