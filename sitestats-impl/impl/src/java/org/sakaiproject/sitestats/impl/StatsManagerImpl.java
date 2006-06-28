@@ -373,11 +373,14 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		ResourceProperties rp = r.getProperties();
 		
 		boolean isCollection;
-		try{
-			isCollection = rp.getBooleanProperty(rp.getNamePropIsCollection());
-		}catch(Exception e){
+		if(rp != null){
+			try{
+				isCollection = rp.getBooleanProperty(rp.getNamePropIsCollection());
+			}catch(Exception e){
+				isCollection = false;
+			}
+		}else
 			isCollection = false;
-		}
 		
 		String imgLink = "";
 		if(isCollection)
