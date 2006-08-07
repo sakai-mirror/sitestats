@@ -18,6 +18,10 @@
  **********************************************************************************/
 package org.sakaiproject.sitestats.impl;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +38,7 @@ import net.sf.hibernate.HibernateException;
 import net.sf.hibernate.Query;
 import net.sf.hibernate.Session;
 import net.sf.hibernate.expression.Expression;
+import net.sf.hibernate.type.Type;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -121,10 +126,15 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	// Spring init/destroy methods
 	// ################################################################	
 	public void init(){
-		String sqlUpdateScriptName = "sakai_sitestats_post_schemaupdate";
-		if (autoDdl && (M_sql != null)) {
-			if (LOG.isInfoEnabled()) LOG.info("About to call sqlService.ddl with " + sqlUpdateScriptName);
-			M_sql.ddl(this.getClass().getClassLoader(), sqlUpdateScriptName);
+//		String sqlRenameUpdateScriptName = "sakai_sitestats_post_schemaupdate_ren";
+//		String sqlUpdateScriptName = "sakai_sitestats_post_schemaupdate";
+		if (autoDdl && M_sql != null/* && M_sql.getVendor().equals("mysql")*/) {
+//			if (LOG.isInfoEnabled()) LOG.info("About to call sqlService.ddl with " + sqlRenameUpdateScriptName);
+//			M_sql.ddl(this.getClass().getClassLoader(), sqlRenameUpdateScriptName);
+//			if (LOG.isInfoEnabled()) LOG.info("About to call sqlService.ddl with " + sqlUpdateScriptName);
+//			M_sql.ddl(this.getClass().getClassLoader(), sqlUpdateScriptName);
+			DBHelper dbHelper = new DBHelper(M_sql);
+			dbHelper.updateIndexes();
 		}
 	}
 
@@ -190,71 +200,69 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.StatsManager#setSiteConfiguredEventIds(java.lang.String, java.util.List, int)
 	 */
-	public void setSiteConfiguredEventIds(final String siteId, List eventIds, final int page) {
+	public void setSiteConfiguredEventIds(final String siteId, final List eventIds, final int page) {
 		if (siteId == null || eventIds == null){
 			throw new IllegalArgumentException("Null siteId or eventIds");
 		}else{
-			// 1. List actual list
-			HibernateCallback hcb1 = new HibernateCallback(){                
+			getHibernateTemplate().execute(new HibernateCallback(){                
 	    		public Object doInHibernate(Session session) throws HibernateException, SQLException {
-	    			List currPrefs = session.createCriteria(PrefsImpl.class)
-	    				.add(Expression.eq("siteId", siteId))
-	    				.add(Expression.eq("page", new Integer(page)))
-	    				.list();
-	    			return currPrefs;
-	    		}
-			};
-			List currPrefs = (List) getHibernateTemplate().execute(hcb1);
-	    			
-	    	// 2. Find records to remove
-			List toRemoveFromExistingList = new ArrayList();
-			List toRemoveFromNewList = new ArrayList();
-	    	Iterator c = currPrefs.iterator();
-	    	while(c.hasNext()){
-	    		Prefs p = (Prefs) c.next();
-	    		boolean toRemove = true;
-	    		Iterator n = eventIds.iterator();
-	    		while(n.hasNext()){
-	    			String s1 = (String) n.next();
-	    			if(p.getEventId().equals(s1)
-	    					&& p.getPage() == page){
-	    				toRemove = false;
-	    				toRemoveFromNewList.add(s1);
-	    			}
-	    		}
-	    		if(toRemove)
-	    			toRemoveFromExistingList.add(p);
-	    	}
-	    		
-	    	// 3. Remove existing not necessary records 
-			try{
-				getHibernateTemplate().deleteAll(toRemoveFromExistingList);
-			}catch(DataAccessException e){
-				logger.error("Unable to remove prefs: " + toRemoveFromExistingList.toString(), e);
-			}	
-			
-			// 4. Remove records from new list
-			Iterator r = toRemoveFromNewList.iterator();
-			while(r.hasNext())
-				eventIds.remove(r.next());
-	    	
-	    	// 3. Add new records
-			List newPrefs = new ArrayList();
-			Iterator i = eventIds.iterator();
-			while(i.hasNext()){
-				Prefs n = new PrefsImpl();
-				n.setSiteId(siteId);
-				n.setEventId((String) i.next());
-				n.setPage(page);
-				newPrefs.add(n);
-			}
-	    	try{
-				getHibernateTemplate().saveOrUpdateAll(newPrefs);
-			}catch(DataAccessException e){
-				logger.error("Unable to save/update pref: " + newPrefs.toString(), e);
-			}	
+	    			try{
+						// 1. List actual list
+						List currPrefs = session.createCriteria(PrefsImpl.class)
+							.add(Expression.eq("siteId", siteId))
+							.add(Expression.eq("page", new Integer(page)))
+							.list();
+						
+						// 2. Find records to remove
+						List toRemoveFromNewList = new ArrayList();
+						List toRemoveFromExistingList = new ArrayList();
+						Iterator c = currPrefs.iterator();
+						while (c.hasNext()){
+							Prefs p = (Prefs) c.next();
+							boolean toRemove = true;
+							Iterator n = eventIds.iterator();
+							while (n.hasNext()){
+								String s1 = (String) n.next();
+								if(p.getEventId().equals(s1) && p.getPage() == page){
+									toRemove = false;
+									toRemoveFromNewList.add(s1);
+								}
+							}
+							if(toRemove){
+								// remove de-selected event from existing (saved) list
+								toRemoveFromExistingList.add(p);
+							}
+						}
+						
+						// 3. Remove de-selected event from existing (saved) list
+						Iterator rn = toRemoveFromExistingList.iterator();
+						while (rn.hasNext())
+							session.delete(rn.next());
+
+						// 4. Remove already selected events from new list
+						Iterator r = toRemoveFromNewList.iterator();
+						while (r.hasNext())
+							eventIds.remove(r.next());
+
+						// 5. Add new records
+						Iterator i = eventIds.iterator();
+						while (i.hasNext()){
+							Prefs n = new PrefsImpl();
+							n.setSiteId(siteId);
+							n.setEventId((String) i.next());
+							n.setPage(page);
+							session.saveOrUpdate(n);
+						}
+					}catch(Exception e){
+						LOG.warn("Unable to save preferences for site id: "+siteId, e);
+					}
+					return null;
+				}
+			});
 		}
 	}
+	
+	 
 	
 	
 	// ################################################################
@@ -664,51 +672,101 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		}else{
 			String iDateStr = "";
 			String fDateStr = "";
-			if(iDate != null)
-				iDateStr = "and s.date >= :idate ";
-			if(fDate != null)
-				fDateStr = "and s.date < :fdate ";
+			if(M_sql.getVendor().equals("oracle")){
+				if(iDate != null)
+					iDateStr = "and s.VISITS_DATE >= ? ";
+				if(fDate != null)
+					fDateStr = "and s.VISITS_DATE < ? ";
+			}else{
+				if(iDate != null)
+					iDateStr = "and s.date >= :idate ";
+				if(fDate != null)
+					fDateStr = "and s.date < :fdate ";
+			}
 			final String hql = "select s.siteId, sum(s.totalVisits), sum(s.totalUnique), year(s.date), month(s.date) " + 
 					"from SiteVisitsImpl as s " +
 					"where s.siteId = :siteid " +
 					iDateStr + fDateStr +
 					"group by s.siteId, year(s.date), month(s.date)";
 			
-			HibernateCallback hcb = new HibernateCallback() {
-				public Object doInHibernate(Session session) throws HibernateException, SQLException {
-					Query q = session.createQuery(hql);
-					q.setString("siteid", siteId);
+			if(M_sql.getVendor().equals("oracle")){
+				final String nativeOracleSql = 
+					"select s.SITE_ID as actSiteId, sum(s.TOTAL_VISITS) as actVisits, sum(s.TOTAL_UNIQUE) as actUnique, to_char(s.VISITS_DATE,'YYYY') as actYear, to_char(s.VISITS_DATE,'MM') as actMonth " + 
+					"from SST_SITEVISITS s " +
+					"where s.SITE_ID = ? " +
+					iDateStr + fDateStr +
+					"group by s.SITE_ID, to_char(s.VISITS_DATE,'YYYY'), to_char(s.VISITS_DATE,'MM')";
+			
+				List results = new ArrayList();
+				try{
+					Connection c = M_sql.borrowConnection();
+					PreparedStatement ps = c.prepareStatement(nativeOracleSql);
+					int i = 1;
+					ps.setString(i++, siteId);
 					if(iDate != null)
-						q.setDate("idate", iDate);
+						ps.setDate(i++, new java.sql.Date(iDate.getTime()));
 					if(fDate != null){
 						// adjust final date
-						Calendar c = Calendar.getInstance();
-						c.setTime(fDate);
-						c.add(Calendar.DAY_OF_YEAR, 1);
-						Date fDate2 = c.getTime();
-						q.setDate("fdate", fDate2);
+						Calendar ca = Calendar.getInstance();
+						ca.setTime(fDate);
+						ca.add(Calendar.DAY_OF_YEAR, 1);
+						Date fDate2 = ca.getTime();
+						ps.setDate(i++, new java.sql.Date(fDate2.getTime()));
 					}
-					List records = q.list();
-					List results = new ArrayList();
+					ResultSet rs = ps.executeQuery();
 					Calendar cal = Calendar.getInstance();
-					if(records.size() > 0){
-						for(Iterator iter = records.iterator(); iter.hasNext();) {
-							Object[] s = (Object[]) iter.next();
-							SiteVisits c = new SiteVisitsImpl();
-							c.setSiteId((String)s[0]);
-							c.setTotalVisits(((Long)s[1]).longValue());
-							c.setTotalUnique(((Long)s[2]).longValue());
-							cal.set(Calendar.YEAR, ((Integer)s[3]).intValue());
-							cal.set(Calendar.MONTH, ((Integer)s[4]).intValue() - 1);
-							c.setDate(cal.getTime());
-							results.add(c);
-						}
-						return results;
-					}
-					else return results;	
+					while(rs.next()){
+						SiteVisits sa = new SiteVisitsImpl();
+						sa.setSiteId(rs.getString(1));
+						sa.setTotalVisits((rs.getBigDecimal(2)).longValue());
+						sa.setTotalUnique((rs.getBigDecimal(3)).longValue());
+						cal.set(Calendar.YEAR, Integer.parseInt(rs.getString(4)));
+						cal.set(Calendar.MONTH, Integer.parseInt(rs.getString(5)) - 1);
+						sa.setDate(cal.getTime());
+						results.add(sa);
+					}					
+					c.close();
+				}catch(Exception e){
+					LOG.error("Error executing SQL in getSiteVisitsByMonth()", e);
 				}
-			};
-			return (List) getHibernateTemplate().execute(hcb);
+				return results;
+			}else{	
+				HibernateCallback hcb = new HibernateCallback() {
+					public Object doInHibernate(Session session) throws HibernateException, SQLException {
+						Query q = session.createQuery(hql);
+						q.setString("siteid", siteId);
+						if(iDate != null)
+							q.setDate("idate", iDate);
+						if(fDate != null){
+							// adjust final date
+							Calendar c = Calendar.getInstance();
+							c.setTime(fDate);
+							c.add(Calendar.DAY_OF_YEAR, 1);
+							Date fDate2 = c.getTime();
+							q.setDate("fdate", fDate2);
+						}
+						List records = q.list();
+						List results = new ArrayList();
+						Calendar cal = Calendar.getInstance();
+						if(records.size() > 0){
+							for(Iterator iter = records.iterator(); iter.hasNext();) {
+								Object[] s = (Object[]) iter.next();
+								SiteVisits c = new SiteVisitsImpl();
+								c.setSiteId((String)s[0]);
+								c.setTotalVisits(((Long)s[1]).longValue());
+								c.setTotalUnique(((Long)s[2]).longValue());
+								cal.set(Calendar.YEAR, ((Integer)s[3]).intValue());
+								cal.set(Calendar.MONTH, ((Integer)s[4]).intValue() - 1);
+								c.setDate(cal.getTime());
+								results.add(c);
+							}
+							return results;
+						}
+						else return results;	
+					}
+				};
+				return (List) getHibernateTemplate().execute(hcb);
+			}
 		}
 	}
 	
@@ -754,10 +812,17 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		}else{
 			String iDateStr = "";
 			String fDateStr = "";
-			if(iDate != null)
-				iDateStr = "and s.date >= :idate ";
-			if(fDate != null)
-				fDateStr = "and s.date < :fdate ";
+			if(M_sql.getVendor().equals("oracle")){
+				if(iDate != null)
+					iDateStr = "and s.ACTIVITY_DATE >= ? ";//:idate ";
+				if(fDate != null)
+					fDateStr = "and s.ACTIVITY_DATE < ? ";//:fdate ";
+			}else{
+				if(iDate != null)
+					iDateStr = "and s.date >= :idate ";
+				if(fDate != null)
+					fDateStr = "and s.date < :fdate ";
+			}
 			final String hql = "select s.siteId, sum(s.count), year(s.date), month(s.date), day(s.date) " + 
 					"from SiteActivityImpl as s " +
 					"where s.siteId = :siteid " +
@@ -765,46 +830,105 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 					iDateStr + fDateStr +
 					"group by s.siteId, year(s.date), month(s.date), day(s.date)";
 			
-			HibernateCallback hcb = new HibernateCallback() {
-				public Object doInHibernate(Session session) throws HibernateException, SQLException {
-					Query q = session.createQuery(hql);
-					q.setString("siteid", siteId);
-					if(events != null && events.size() > 0)
-						q.setParameterList("eventlist", events);
-					else
-						q.setParameterList("eventlist", getDefaultEventIdsForActivity());
+			if(M_sql.getVendor().equals("oracle")){
+				String eventsPs = "";
+				List es = null;
+				if(events != null && events.size() > 0)
+					es = events;
+				else
+					es = getDefaultEventIdsForActivity();
+				int eventsSize = es.size();
+				for(int n=0; n<eventsSize; n++){
+					eventsPs += "?";
+					if(n < eventsSize - 1)
+						eventsPs += ",";
+				}
+				final String nativeOracleSql = 
+					"select s.SITE_ID as actSiteId, sum(s.ACTIVITY_COUNT) as actCount, to_char(s.ACTIVITY_DATE,'YYYY') as actYear, to_char(s.ACTIVITY_DATE,'MM') as actMonth, to_char(s.ACTIVITY_DATE,'DD') as actDay " + 
+					"from SST_SITEACTIVITY s " +
+					"where s.SITE_ID = ? " +
+					"and s.EVENT_ID in ("+eventsPs+") " +
+					iDateStr + fDateStr +
+					"group by s.SITE_ID, to_char(s.ACTIVITY_DATE,'YYYY'), to_char(s.ACTIVITY_DATE,'MM'), to_char(s.ACTIVITY_DATE,'DD')";
+			
+				List results = new ArrayList();
+				try{
+					Connection c = M_sql.borrowConnection();
+					PreparedStatement ps = c.prepareStatement(nativeOracleSql);
+					int i = 1;
+					ps.setString(i++, siteId);
+					for(int n=0; n<eventsSize; n++)
+						ps.setString(i++, (String) es.get(n));
 					if(iDate != null)
-						q.setDate("idate", iDate);
+						ps.setDate(i++, new java.sql.Date(iDate.getTime()));
 					if(fDate != null){
 						// adjust final date
-						Calendar c = Calendar.getInstance();
-						c.setTime(fDate);
-						c.add(Calendar.DAY_OF_YEAR, 1);
-						Date fDate2 = c.getTime();
-						q.setDate("fdate", fDate2);
+						Calendar ca = Calendar.getInstance();
+						ca.setTime(fDate);
+						ca.add(Calendar.DAY_OF_YEAR, 1);
+						Date fDate2 = ca.getTime();
+						ps.setDate(i++, new java.sql.Date(fDate2.getTime()));
 					}
-					List records = q.list();
-					List results = new ArrayList();
+					ResultSet rs = ps.executeQuery();
 					Calendar cal = Calendar.getInstance();
-					if(records.size() > 0){
-						for(Iterator iter = records.iterator(); iter.hasNext();) {
-							Object[] s = (Object[]) iter.next();
-							SiteActivity c = new SiteActivityImpl();
-							c.setSiteId((String)s[0]);
-							c.setCount(((Long)s[1]).longValue());
-							cal.set(Calendar.YEAR, ((Integer)s[2]).intValue());
-							cal.set(Calendar.MONTH, ((Integer)s[3]).intValue() - 1);
-							cal.set(Calendar.DAY_OF_MONTH, ((Integer)s[4]).intValue());
-							c.setDate(cal.getTime());
-							c.setEventId(null);
-							results.add(c);
-						}
-						return results;
-					}
-					else return results;	
+					while(rs.next()){
+						SiteActivity sa = new SiteActivityImpl();
+						sa.setSiteId(rs.getString(1));
+						sa.setCount((rs.getBigDecimal(2)).longValue());
+						cal.set(Calendar.YEAR, Integer.parseInt(rs.getString(3)));
+						cal.set(Calendar.MONTH, Integer.parseInt(rs.getString(4)) - 1);
+						cal.set(Calendar.DAY_OF_MONTH, Integer.parseInt(rs.getString(5)));	
+						sa.setDate(cal.getTime());
+						sa.setEventId(null);
+						results.add(sa);
+					}					
+					c.close();
+				}catch(Exception e){
+					LOG.error("Error executing SQL in getSiteActivityByDay()", e);
 				}
-			};
-			return (List) getHibernateTemplate().execute(hcb);
+				return results;
+			}else{
+				HibernateCallback hcb = new HibernateCallback() {
+					public Object doInHibernate(Session session) throws HibernateException, SQLException {
+						Query q = session.createQuery(hql);
+						q.setString("siteid", siteId);
+						if(events != null && events.size() > 0)
+							q.setParameterList("eventlist", events);
+						else
+							q.setParameterList("eventlist", getDefaultEventIdsForActivity());
+						if(iDate != null)
+							q.setDate("idate", iDate);
+						if(fDate != null){
+							// adjust final date
+							Calendar c = Calendar.getInstance();
+							c.setTime(fDate);
+							c.add(Calendar.DAY_OF_YEAR, 1);
+							Date fDate2 = c.getTime();
+							q.setDate("fdate", fDate2);
+						}
+						List records = q.list();
+						List results = new ArrayList();
+						Calendar cal = Calendar.getInstance();
+						if(records.size() > 0){
+							for(Iterator iter = records.iterator(); iter.hasNext();) {
+								Object[] s = (Object[]) iter.next();
+								SiteActivity c = new SiteActivityImpl();
+								c.setSiteId((String)s[0]);
+								c.setCount(((Long)s[1]).longValue());
+								cal.set(Calendar.YEAR, ((Integer)s[2]).intValue());
+								cal.set(Calendar.MONTH, ((Integer)s[3]).intValue() - 1);
+								cal.set(Calendar.DAY_OF_MONTH, ((Integer)s[4]).intValue());
+								c.setDate(cal.getTime());
+								c.setEventId(null);
+								results.add(c);
+							}
+							return results;
+						}
+						else return results;	
+					}
+				};
+				return (List) getHibernateTemplate().execute(hcb);
+			}
 		}
 	}
 	
@@ -818,10 +942,17 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		}else{
 			String iDateStr = "";
 			String fDateStr = "";
-			if(iDate != null)
-				iDateStr = "and s.date >= :idate ";
-			if(fDate != null)
-				fDateStr = "and s.date < :fdate ";
+			if(M_sql.getVendor().equals("oracle")){
+				if(iDate != null)
+					iDateStr = "and s.ACTIVITY_DATE >= ? ";
+				if(fDate != null)
+					fDateStr = "and s.ACTIVITY_DATE < ? ";
+			}else{
+				if(iDate != null)
+					iDateStr = "and s.date >= :idate ";
+				if(fDate != null)
+					fDateStr = "and s.date < :fdate ";
+			}
 			final String hql = "select s.siteId, sum(s.count), year(s.date), month(s.date) " + 
 					"from SiteActivityImpl as s " +
 					"where s.siteId = :siteid " +
@@ -829,45 +960,103 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 					iDateStr + fDateStr +
 					"group by s.siteId, year(s.date), month(s.date)";
 			
-			HibernateCallback hcb = new HibernateCallback() {
-				public Object doInHibernate(Session session) throws HibernateException, SQLException {
-					Query q = session.createQuery(hql);
-					q.setString("siteid", siteId);
-					if(events != null && events.size() > 0)
-						q.setParameterList("eventlist", events);
-					else
-						q.setParameterList("eventlist", getDefaultEventIdsForActivity());
+			if(M_sql.getVendor().equals("oracle")){
+				String eventsPs = "";
+				List es = null;
+				if(events != null && events.size() > 0)
+					es = events;
+				else
+					es = getDefaultEventIdsForActivity();
+				int eventsSize = es.size();
+				for(int n=0; n<eventsSize; n++){
+					eventsPs += "?";
+					if(n < eventsSize - 1)
+						eventsPs += ",";
+				}
+				final String nativeOracleSql = 
+					"select s.SITE_ID as actSiteId, sum(s.ACTIVITY_COUNT) as actCount, to_char(s.ACTIVITY_DATE,'YYYY') as actYear, to_char(s.ACTIVITY_DATE,'MM') as actMonth " + 
+					"from SST_SITEACTIVITY s " +
+					"where s.SITE_ID = ? " +
+					"and s.EVENT_ID in ("+eventsPs+") " +
+					iDateStr + fDateStr +
+					"group by s.SITE_ID, to_char(s.ACTIVITY_DATE,'YYYY'), to_char(s.ACTIVITY_DATE,'MM')";
+			
+				List results = new ArrayList();
+				try{
+					Connection c = M_sql.borrowConnection();
+					PreparedStatement ps = c.prepareStatement(nativeOracleSql);
+					int i = 1;
+					ps.setString(i++, siteId);
+					for(int n=0; n<eventsSize; n++)
+						ps.setString(i++, (String) es.get(n));
 					if(iDate != null)
-						q.setDate("idate", iDate);
+						ps.setDate(i++, new java.sql.Date(iDate.getTime()));
 					if(fDate != null){
 						// adjust final date
-						Calendar c = Calendar.getInstance();
-						c.setTime(fDate);
-						c.add(Calendar.DAY_OF_YEAR, 1);
-						Date fDate2 = c.getTime();
-						q.setDate("fdate", fDate2);
+						Calendar ca = Calendar.getInstance();
+						ca.setTime(fDate);
+						ca.add(Calendar.DAY_OF_YEAR, 1);
+						Date fDate2 = ca.getTime();
+						ps.setDate(i++, new java.sql.Date(fDate2.getTime()));
 					}
-					List records = q.list();
-					List results = new ArrayList();
+					ResultSet rs = ps.executeQuery();
 					Calendar cal = Calendar.getInstance();
-					if(records.size() > 0){
-						for(Iterator iter = records.iterator(); iter.hasNext();) {
-							Object[] s = (Object[]) iter.next();
-							SiteActivity c = new SiteActivityImpl();
-							c.setSiteId((String)s[0]);
-							c.setCount(((Long)s[1]).longValue());
-							cal.set(Calendar.YEAR, ((Integer)s[2]).intValue());
-							cal.set(Calendar.MONTH, ((Integer)s[3]).intValue() - 1);
-							c.setDate(cal.getTime());
-							c.setEventId(null);
-							results.add(c);
-						}
-						return results;
-					}
-					else return results;	
+					while(rs.next()){
+						SiteActivity sa = new SiteActivityImpl();
+						sa.setSiteId(rs.getString(1));
+						sa.setCount((rs.getBigDecimal(2)).longValue());
+						cal.set(Calendar.YEAR, Integer.parseInt(rs.getString(3)));
+						cal.set(Calendar.MONTH, Integer.parseInt(rs.getString(4)) - 1);
+						sa.setDate(cal.getTime());
+						sa.setEventId(null);
+						results.add(sa);
+					}					
+					c.close();
+				}catch(Exception e){
+					LOG.error("Error executing SQL in getSiteActivityByMonth()", e);
 				}
-			};
-			return (List) getHibernateTemplate().execute(hcb);
+				return results;
+			}else{			
+				HibernateCallback hcb = new HibernateCallback() {
+					public Object doInHibernate(Session session) throws HibernateException, SQLException {
+						Query q = session.createQuery(hql);
+						q.setString("siteid", siteId);
+						if(events != null && events.size() > 0)
+							q.setParameterList("eventlist", events);
+						else
+							q.setParameterList("eventlist", getDefaultEventIdsForActivity());
+						if(iDate != null)
+							q.setDate("idate", iDate);
+						if(fDate != null){
+							// adjust final date
+							Calendar c = Calendar.getInstance();
+							c.setTime(fDate);
+							c.add(Calendar.DAY_OF_YEAR, 1);
+							Date fDate2 = c.getTime();
+							q.setDate("fdate", fDate2);
+						}
+						List records = q.list();
+						List results = new ArrayList();
+						Calendar cal = Calendar.getInstance();
+						if(records.size() > 0){
+							for(Iterator iter = records.iterator(); iter.hasNext();) {
+								Object[] s = (Object[]) iter.next();
+								SiteActivity c = new SiteActivityImpl();
+								c.setSiteId((String)s[0]);
+								c.setCount(((Long)s[1]).longValue());
+								cal.set(Calendar.YEAR, ((Integer)s[2]).intValue());
+								cal.set(Calendar.MONTH, ((Integer)s[3]).intValue() - 1);
+								c.setDate(cal.getTime());
+								c.setEventId(null);
+								results.add(c);
+							}
+							return results;
+						}
+						else return results;	
+					}
+				};
+				return (List) getHibernateTemplate().execute(hcb);
+			}
 		}
 	}
 	
