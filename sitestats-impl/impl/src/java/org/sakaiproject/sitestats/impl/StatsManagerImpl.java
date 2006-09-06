@@ -96,6 +96,18 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		for(int i=0; i<e.length; i++)
 			registeredEvents.add(e[i].trim());
 	}
+	
+	public void setAddEventIds(String eventIds) {
+		String[] e = eventIds.replace('\n', ' ').split(",");
+		for(int i=0; i<e.length; i++)
+			registeredEvents.add(e[i].trim());
+	}
+	
+	public void setRemoveEventIds(String eventIds) {
+		String[] e = eventIds.replace('\n', ' ').split(",");
+		for(int i=0; i<e.length; i++)
+			registeredEvents.remove(e[i].trim());
+	}
 
 	public void setCollectAdminEvents(boolean value){
 		this.collectAdminEvents = value;
@@ -1309,6 +1321,8 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	}
 	
 	private List searchUsers(String searchKey){
+		if(searchKey == null || searchKey.trim().equals(""))
+			return null;
 		List userList = M_uds.searchUsers(searchKey, 0, Integer.MAX_VALUE);
 		List userIdList = new ArrayList();
 		Iterator i = userList.iterator();
@@ -1345,6 +1359,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	 * @return Whether user has permissions to this tool in this site.
 	 */
 	private boolean isToolAllowedForRole(Tool tool, String roleId) {
+		if(tool == null) return false;
 		String TOOL_CFG_ROLES_ALLOW = "roles.allow";
 		String TOOL_CFG_ROLES_DENY = "roles.deny";
 		Properties roleConfig = tool.getRegisteredConfig();
