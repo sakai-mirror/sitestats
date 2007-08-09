@@ -41,9 +41,9 @@ Feel free to send suggestions to ufpuv-suporte@ufp.pt or by using the SiteStats 
 	* JDK 1.5+ installed
 	* For MAVEN 1 deployments, the following must be manually added to local maven repository:
 		* Ajax4JSF 1.1.1:
-			- copy from lib/ajax4jsf-1.1.1.jar to ~/.maven/repository/org.ajax4jsf/jars/
+			- copy from {sitestats_src}/lib/ajax4jsf-1.1.1.jar to ~/.maven/repository/org.ajax4jsf/jars/
 		* xmlgraphics-commons 1.1
-			- copy from lib/xmlgraphics-commons-1.1.jar to ~/.maven/repository/org.apache.xmlgraphics/jars/
+			- copy from {sitestats_src}/lib/xmlgraphics-commons-1.1.jar to ~/.maven/repository/org.apache.xmlgraphics/jars/
 		
 3.2 Build/deploy
 	* Copy the sitestats source folder into the Sakai source tree

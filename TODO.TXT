@@ -1,19 +1,3 @@
-== TO DO for 1.0 ==
-===================
-	- [XML/Bundle] add/verify for events in tools: Evaluation, GradTools, Mneme
-	- [Reports] additional type filtering options for Resources?: Site, Dropbox, Attachment
-	- [Reports] implement user privacy
-	- [Preferences] provide a clear distinction with css styles for partial event selection for a given tool
-	- [API] implement default Quartz job, add public methods in StatsUpdatemanager
-	- [API] improve sql performance in aggregation thread (StatsUpdateManagerImpl.java)
-	- [API] add comments to java methods
-	- [MIGRATION] java/sql to migrate preferences to new format
+Please see SiteStats Confluence page for development tasks:
 
-
-== TO DO for 1.1 ==
-===================
-	- [Reports] Fix missing image in PDF export (needs JIMI and JAI --> not in maven & license conflict?)
-	- [Admin] Enhance administrator view (sitestats.admin.tool):
-		- site aggregated reports/charts?
-		- new menu bar: "All sites | Browse site"
-		- replace "Sites list" menu entry with buttons as in "Worksite Setup"
+http://bugs.sakaiproject.org/confluence/display/STAT/Development+Tasks
