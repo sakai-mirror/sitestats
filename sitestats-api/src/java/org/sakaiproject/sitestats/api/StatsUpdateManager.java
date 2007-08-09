@@ -41,6 +41,15 @@ public interface StatsUpdateManager {
 	/** Get the collect thread sleep interval. */
 	public long getCollectThreadUpdateInterval();
 	
+
+	/** Collect administrator events */
+	public boolean isCollectAdminEvents();
+	public void setCollectAdminEvents(boolean value);
+	
+	/** Collect events ONLY for sites with SiteStats tool? */
+	public boolean isCollectEventsForSiteWithToolOnly();
+	public void setCollectEventsForSiteWithToolOnly(boolean value);
+	
 	/**
 	 * Collect (process) a Sakai event into SiteStats tables.
 	 * This method is called by the default quartz job implementation and should be called for every other custom quartz

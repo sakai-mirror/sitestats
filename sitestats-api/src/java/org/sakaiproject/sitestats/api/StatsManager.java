@@ -77,10 +77,6 @@ public interface StatsManager {
 	
 	public boolean isItemLabelsVisible();
 	
-	public boolean isCollectAdminEvents();
-	
-	public boolean isCollectEventsForSiteWithToolOnly();
-	
 	// ################################################################
 	// Registered/configured events 
 	// ################################################################

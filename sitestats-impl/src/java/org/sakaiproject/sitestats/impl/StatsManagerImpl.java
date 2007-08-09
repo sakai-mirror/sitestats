@@ -104,8 +104,6 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	private boolean						chartIn3D								= true;
 	private float						chartTransparency						= 0.80f;
 	private boolean						itemLabelsVisible						= false;
-	private boolean						collectAdminEvents						= false;
-	private boolean						collectEventsForSiteWithToolOnly		= true;
 
 	/** Controller fields */
 	private List<ToolInfo>					toolEventsDefinition					= null;
@@ -181,25 +179,9 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	public boolean isItemLabelsVisible() {
 		return itemLabelsVisible;
 	}
-	
-	public void setCollectAdminEvents(boolean value){
-		this.collectAdminEvents = value;
-	}
 
 	public void setShowAnonymousEvents(boolean value){
 		this.showAnonymousEvents = value;
-	}
-
-	public boolean isCollectAdminEvents(){
-		return collectAdminEvents;
-	}
-
-	public void setCollectEventsForSiteWithToolOnly(boolean value){
-		this.collectEventsForSiteWithToolOnly = value;
-	}
-	
-	public boolean isCollectEventsForSiteWithToolOnly(){
-		return collectEventsForSiteWithToolOnly;
 	}
 
 	public void setAutoDdl(boolean autoDdl) {
@@ -241,8 +223,6 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		}
 		
 		loadToolEventsDefinitionFile();
-		logger.info("init(): - collect administrator events: " + collectAdminEvents);
-		logger.info("init(): - collect events only for sites with SiteStats: " + collectEventsForSiteWithToolOnly);
 		logger.info("init(): - charts background color: " + chartBackgroundColor);
 		logger.info("init(): - charts in 3D: " + chartIn3D);
 		logger.info("init(): - charts transparency: " + chartTransparency);

@@ -63,6 +63,8 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	/** Spring bean members */
 	private boolean					collectThreadEnabled		= true;
 	public long						collectThreadUpdateInterval	= 4000L;
+	private boolean						collectAdminEvents						= false;
+	private boolean						collectEventsForSiteWithToolOnly		= true;
 
 	/** Sakai services */
 	private StatsManager			M_sm;
@@ -100,6 +102,22 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		return collectThreadUpdateInterval;
 	}	
 	
+	public void setCollectAdminEvents(boolean value){
+		this.collectAdminEvents = value;
+	}
+
+	public boolean isCollectAdminEvents(){
+		return collectAdminEvents;
+	}
+
+	public void setCollectEventsForSiteWithToolOnly(boolean value){
+		this.collectEventsForSiteWithToolOnly = value;
+	}
+	
+	public boolean isCollectEventsForSiteWithToolOnly(){
+		return collectEventsForSiteWithToolOnly;
+	}
+	
 	public void setStatsManager(StatsManager mng){
 		this.M_sm = mng;
 	}
@@ -127,6 +145,8 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		logger.info("init(): - collect thread enabled: " + collectThreadEnabled);
 		if(collectThreadEnabled) {
 			logger.info("init(): - collect thread db update interval: " + collectThreadUpdateInterval +" ms");
+			logger.info("init(): - collect administrator events: " + collectAdminEvents);
+			logger.info("init(): - collect events only for sites with SiteStats: " + collectEventsForSiteWithToolOnly);
 			
 			// start update thread
 			startUpdateThread();
@@ -168,7 +188,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			if(siteId == null || M_ss.isUserSite(siteId) || M_ss.isSpecialSite(siteId)){
 				return;
 			}
-			if(M_sm.isCollectEventsForSiteWithToolOnly()){
+			if(isCollectEventsForSiteWithToolOnly()){
 				try {
 					if(M_ss.getSite(siteId).getToolForCommonId(StatsManager.SITESTATS_TOOLID) == null)
 						return;
@@ -180,7 +200,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			
 			// user check
 			if(userId == null) userId = M_uss.getSession(e.getSessionId()).getUserId();
-			if(!M_sm.isCollectAdminEvents() && userId.equals("admin")){
+			if(!isCollectAdminEvents() && userId.equals("admin")){
 				return;
 			}
 
