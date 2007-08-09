@@ -295,7 +295,7 @@
 	        		//renderVisitsChart(getChartWidth(), getChartHeight(), getBodyBackgroundColor());
 	        		renderVisitsChart(getChartWidth(), getChartHeight(), 'white');
 	        		renderVisitsTable();
-                  	renderActivityChart();
+                  	renderActivityChart(getChartWidth(), getChartHeight(), 'white');
                   	renderActivityTable();
 	        	</script>
 			</f:verbatim>
