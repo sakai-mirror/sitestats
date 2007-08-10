@@ -34,7 +34,6 @@ function selectEvent(checkObj){
  		try{
  			if(checkObj.parentNode.childNodes[i].nodeName == 'SPAN'){
 				if(checkObj.checked){
-                    selectedEventCount++;
 					checkObj.parentNode.childNodes[i].className= 'nodeEventSelected';
 				}else{
 					checkObj.parentNode.childNodes[i].className= 'nodeEventUnselected';

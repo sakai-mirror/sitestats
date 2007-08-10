@@ -118,7 +118,7 @@
 					                <f:facet name="collapse">
 					                </f:facet>
 									<t:selectBooleanCheckbox value="#{node.selected}" immediate="true"
-										onchange="selectTool(this)"/>
+										onclick="selectTool(this)"/>
 					                <t:graphicImage value="/sitestats/images/silk/icons/application_side_boxes.png" border="0" styleClass="nodeIcon"/>
 					                <h:outputText value=" #{node.description}" styleClass="nodeToolUnselected" rendered="#{!node.selected}"/>
 					                <h:outputText value=" #{node.description}" styleClass="nodeToolSelected" rendered="#{node.selected && node.allChildsSelected}"/>
@@ -133,7 +133,7 @@
 					                <f:facet name="collapse">
 					                </f:facet>
 									<t:selectBooleanCheckbox value="#{node.selected}" immediate="true"
-										onchange="selectEvent(this)"/>
+										onclick="selectEvent(this)"/>
 					                <t:graphicImage value="/sitestats/images/silk/icons/bullet_feed.png" border="0" styleClass="nodeIcon"/>
 					                <h:outputText value=" #{node.description}" styleClass="nodeEventUnselected" rendered="#{!node.selected}"/>
 					                <h:outputText value=" #{node.description}" styleClass="nodeEventSelected" rendered="#{node.selected}"/>
