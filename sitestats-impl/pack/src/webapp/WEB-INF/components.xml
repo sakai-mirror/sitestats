@@ -74,16 +74,14 @@
 		lazy-init="true"
 		init-method="init"
 		destroy-method="destroy">
-		<property name="dbUpdateInterval" value="4000"/>
+		
 		<property name="sessionFactory">
 			<ref bean="org.sakaiproject.springframework.orm.hibernate.GlobalSessionFactory" />
 		</property>
 		<property name="statsManager">
 			<ref bean="org.sakaiproject.sitestats.api.StatsManager" />
 		</property>
-		<property name="usageSessionService">
-			<ref bean="org.sakaiproject.event.api.UsageSessionService" />
-		</property>
+		
 	</bean>
 	<bean id="org.sakaiproject.sitestats.api.StatsUpdateManager"
 		class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">		

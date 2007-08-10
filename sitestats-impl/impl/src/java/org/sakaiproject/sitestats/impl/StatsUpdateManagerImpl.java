@@ -19,12 +19,9 @@
 package org.sakaiproject.sitestats.impl;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,8 +32,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Expression;
 import org.sakaiproject.event.api.Event;
-import org.sakaiproject.event.api.UsageSessionService;
-import org.sakaiproject.event.cover.EventTrackingService;
 import org.sakaiproject.site.cover.SiteService;
 import org.sakaiproject.sitestats.api.EventStat;
 import org.sakaiproject.sitestats.api.ResourceStat;
@@ -51,19 +46,23 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 /**
  * @author <a href="mailto:nuno@ufp.pt">Nuno Fernandes</a>
  */
-public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runnable, StatsUpdateManager, Observer {
+public class StatsUpdateManagerImpl extends HibernateDaoSupport implements StatsUpdateManager {
 	private Log					LOG					= LogFactory.getLog(StatsUpdateManagerImpl.class);
 	
 	/** Sakai services */
 	private StatsManager		M_sm;
+	/*
 	private UsageSessionService	M_uss;
+	*/
 
 	/** Update Thread and Semaphore */
+	/*
 	private Thread				updateThread;
 	private List				updateQueue			= new ArrayList();
 	private Object				semaphore			= new Object();
 	private boolean				threadsRunning		= true;
 	public long					dbUpdateInterval	= 4000L;
+	*/
 
 	private List				registeredEvents	= null;
 	
@@ -71,6 +70,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		this.M_sm = mng;
 	}
 	
+	/*
 	public void setUsageSessionService(UsageSessionService uss){
 		this.M_uss = uss;
 	}
@@ -78,7 +78,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	public void setDbUpdateInterval(long dbUpdateInterval){
 		this.dbUpdateInterval = dbUpdateInterval;
 	}
-
+	*/
 	
 	// ################################################################
 	// Spring init/destroy methods
@@ -88,19 +88,19 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		registeredEvents = M_sm.getRegisteredEventIds();
 		
 		// start update thread
-		startUpdateThread();
+		//startUpdateThread();
 		
 		// add this as Event observer
 		//EventTrackingService.addObserver(this);
-		EventTrackingService.addLocalObserver(this);
+		//EventTrackingService.addLocalObserver(this);
 	}
 	
 	public void destroy(){
 		// remove this as Event observer
-		EventTrackingService.deleteObserver(this);	
+		//EventTrackingService.deleteObserver(this);	
 		
 		// stop update thread
-		stopUpdateThread();
+		//stopUpdateThread();
 	}
 
 	
@@ -108,13 +108,17 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	// Process new events in real time
 	// ################################################################
 	/** Method called whenever an new event is generated from EventTrackingService */
+	/*
 	public void update(Observable obs, Object o) {		
 		if(o instanceof Event){
 			updateQueue.add(o);
 		}//else LOG.info("Not an Event: "+o.toString());
 	}
+	*/
+	
 	
 	/** Update thread: do not call this method! */
+	/*
 	public void run(){
 		try{
 			while(threadsRunning){
@@ -155,30 +159,51 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				LOG.info("Finished statistics update thread");
 		}
 	}
-
+    */
+	
 	/** Start the update thread */
+	/*
 	private void startUpdateThread(){
 		threadsRunning = true;
 		updateThread = null;
 		updateThread = new Thread(this, "org.sakaiproject.sitestats.impl.StatsUpdateManagerImpl");
 		updateThread.start();
 	}
+	*/
 	
 	/** Stop the update thread */
+	/*
 	private void stopUpdateThread(){
 		threadsRunning = false;
 		synchronized (semaphore){
 			semaphore.notifyAll();
 		}
 	}
+	*/
 	
+	public void processBatchEvent(Event e, String userId, String siteId, Date eventDateTime){
+		
+					if(registeredEvents.contains(e.getEvent()) && isValidEvent(e)){						
+						if(!M_sm.isCollectAdminEvents() && userId.equals("admin")) return;
+						if(siteId == null || SiteService.isUserSite(siteId) || SiteService.isSpecialSite(siteId)) return;
+						doUpdate(e, userId, siteId, eventDateTime);
+						LOG.info("Statistics updated for '"+e.getEvent()+"' ("+e.toString()+") USER_ID: "+userId);
+					} else LOG.info("Event ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
+			
+				
+				
+	}
+
+		
 
 	// ################################################################
 	// Update methods
 	// ################################################################
-	private synchronized void doUpdate(Event e, final String userId, final String siteId){		
+	private synchronized void doUpdate(Event e, final String userId, final String siteId, Date eventDateTime){		
 		// event details
-		final Date date = getToday();
+		
+		Date statsDate = setTimeToMidnight(eventDateTime);
+		
 		final String event = e.getEvent();
 		final String resource = e.getResource();
 		if(resource.trim().equals("")) return;
@@ -186,15 +211,15 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		
 		// update		
 		if(registeredEvents.contains(event)){			
-			doUpdateEventStat(event, resource, userId, siteId, date, registeredEvents);
+			doUpdateEventStat(event, resource, userId, siteId, statsDate, registeredEvents);
 			if(!event.equals("pres.begin")){
-				doUpdateSiteActivity(event, siteId, date, registeredEvents);
+				doUpdateSiteActivity(event, siteId, statsDate, registeredEvents);
 			}
 		}	
 		if(event.startsWith("content.")){
-			doUpdateResourceStat(event, resource, userId, siteId, date);
+			doUpdateResourceStat(event, resource, userId, siteId, statsDate);
 		}else if(event.equals("pres.begin")){
-			doUpdateSiteVisits(userId, siteId, date);
+			doUpdateSiteVisits(userId, siteId, statsDate);
 		}
 	}
 
@@ -226,7 +251,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 					
 					Query q = session.createQuery(hql);
 					q.setString("siteid", siteId);
-					q.setDate("idate", getToday());
+					q.setDate("idate", date);
 					//q.setString("userid", userId);
 					long uniqueVisitors = q.list().size();// + 1;
 					
@@ -365,8 +390,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		});
 	}
 	
-
-	// ################################################################
+//	 ################################################################
 	// Utility methods
 	// ################################################################	
 	private synchronized boolean isValidEvent(Event e) {
@@ -401,69 +425,15 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		return true;
 	}
 	
-	private Event fixMalFormedEvents(Event e){
-		String event = e.getEvent();
-		String resource = e.getResource();
-		
-		// fix bad reference (resource) format
-		if(!resource.startsWith("/"))
-			resource = '/' + resource;
-		
-		// fix event ids already in use
-		String parts[] = resource.split("\\/");
-		/* handle MessageCenter special case */
-		if(event.startsWith("content.") && parts[1].equals("MessageCenter"))
-			return EventTrackingService.newEvent(
-					event.replaceFirst("content.", "msgcntr."), 
-					resource, 
-					false);
-		
-		// all ok, return
-		return e;
-	}
-	
-	private String parseSiteId(String ref){
-		try{
-			String[] parts = ref.split("/");
-			if(parts == null)
-				return null;
-			if(parts.length == 1){
-				// try with OLD MessageCenter syntax (MessageCenter::SITE_ID::...)
-				parts = ref.split("::");
-				return parts.length > 1 ? parts[1] : null;
-			}
-			if(parts[0].equals("MessageCenter")){
-				// MessageCenter without initial '/'
-				return parts[2];
-			}
-			if(parts[0].equals("")){
-				if(parts[1].equals("presence"))
-					// try with presence syntax (/presence/SITE_ID-presence)
-					if(parts[2].endsWith("-presence"))
-						return parts[2].substring(0,parts[2].length()-9);
-					else
-						return null;
-				else if(parts[1].equals("syllabus"))
-					// try with Syllabus syntax (/syllabus/SITE_ID/...)
-					return parts[2];
-				else if(parts[1].equals("site"))
-					// try with Section Info syntax (/site/SITE_ID/...)
-					return parts[2];
-				else
-					// try with most common syntax (/abc/cde/SITE_ID/...)
-					return parts[3];
-			}
-		}catch(Exception e){
-			LOG.debug("Unable to parse site ID from "+ref, e);
-		}
-		return null;
-	}
-	
-	private Date getToday() {
+
+	private Date setTimeToMidnight(Date date) {
 		Calendar c = Calendar.getInstance();
+		c.setTime(date);
 		c.set(Calendar.HOUR_OF_DAY, 0);
 		c.set(Calendar.MINUTE, 0);
 		c.set(Calendar.SECOND, 0);
 		return c.getTime();
 	}
+	
+	
 }
