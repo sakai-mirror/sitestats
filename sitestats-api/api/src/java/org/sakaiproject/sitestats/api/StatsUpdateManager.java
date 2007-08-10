@@ -18,9 +18,16 @@
  **********************************************************************************/
 package org.sakaiproject.sitestats.api;
 
+import java.util.Date;
+
+import org.sakaiproject.event.api.Event;
 
 
 
-public interface StatsUpdateManager {	
+public interface StatsUpdateManager {
+	
+	static final String SERVICE_NAME = StatsUpdateManager.class.getName();
+	
+	public void processBatchEvent(Event e, String userId, String siteId, Date date);
 	
 }
