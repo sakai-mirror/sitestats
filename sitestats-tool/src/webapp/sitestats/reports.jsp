@@ -201,7 +201,7 @@
                     	event="onclick"
                         reRender="who-custom-select"
                         rendered="#{!ReportsBean.usersLoaded}" status="who-custom-status"
-                        oncomplete="checkWhoSelection();"/>
+                        oncomplete="checkWhoSelection(); setMainFrameHeightNoScroll(window.name);"/>
                         <t:radio index="3" for="who"/>
                         <a4j:status id="who-custom-status" startText="..." stopText=" " startStyleClass="ajaxLoading"/>
 				</a4j:outputPanel>

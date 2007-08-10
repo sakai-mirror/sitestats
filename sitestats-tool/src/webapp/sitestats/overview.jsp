@@ -209,7 +209,7 @@
 		<a4j:jsFunction name="renderVisitsChart"
 			actionListener="#{ChartParams.renderVisitsChart}"
 		    reRender="visitsSelectors,visitsChartPanel" status="visitsChartStatus"
-		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 630);">
+		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 640);">
 		    <a4j:actionparam name="chartWidth"/>
 		   	<a4j:actionparam name="chartHeight"/>
 		    <a4j:actionparam name="backgroundColor"/>
@@ -222,7 +222,7 @@
 		<a4j:jsFunction name="renderActivityChart"
 			actionListener="#{ChartParams.renderActivityChart}"
 		    reRender="activitySelectors,activityChartPanel" status="activityChartStatus"
-		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 630);">  
+		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 640);">  
 		    <a4j:actionparam name="chartWidth"/>
 		   	<a4j:actionparam name="chartHeight"/>
 		    <a4j:actionparam name="backgroundColor"/>          
@@ -255,7 +255,7 @@
 		<f:verbatim>
 	       	<script type="text/javascript">
 	       		function getMainAreaWidth(){
-	       			return document.getElementById('overviewForm:visitsMainArea').offsetWidth;
+	       			return document.getElementById('overviewForm:visitsMainArea').offsetWidth - 10;
 	       		}
 	       		function getChartWidth(){
 	       			//return document.getElementById('overviewForm:left').offsetWidth;
