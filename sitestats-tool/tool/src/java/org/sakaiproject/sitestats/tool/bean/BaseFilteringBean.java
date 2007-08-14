@@ -409,9 +409,10 @@ public class BaseFilteringBean extends InitializableBean {
 			years = new ArrayList();
 			Calendar c = Calendar.getInstance();
 			int currYear = c.get(Calendar.YEAR);
-			if(initialActivityDate == null) initializeDates();
-			c.setTimeInMillis(initialActivityDate.getTime());
-			int firstYear = c.get(Calendar.YEAR);
+		//	if(initialActivityDate == null) initializeDates();
+		//	c.setTimeInMillis(initialActivityDate.getTime());
+		//	int firstYear = c.get(Calendar.YEAR);
+			int firstYear = 2007;
 			years.add(new SelectItem(NO_DATE));
 			for(int i = firstYear; i <= currYear; i++)
 				years.add(new SelectItem(i + ""));
