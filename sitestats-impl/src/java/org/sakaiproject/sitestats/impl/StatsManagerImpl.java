@@ -2277,7 +2277,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 				"where s.SITE_ID = :siteid " +
 				"and s.EVENT_ID in (:eventlist) " +
 				iDateStr + fDateStr +
-				"group by s.SITE_ID, s.SITE_ID";
+				"group by s.SITE_ID, s.EVENT_ID";
 			
 			HibernateCallback hcb = new HibernateCallback() {
 				public Object doInHibernate(Session session) throws HibernateException, SQLException {
