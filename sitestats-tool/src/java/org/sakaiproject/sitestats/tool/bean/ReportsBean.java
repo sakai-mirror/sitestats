@@ -341,12 +341,10 @@ public class ReportsBean {
 	}
 	
 	public List<SelectItem> getUsers() {
-		String siteId = serviceBean.getSiteId();
-		if(!usersLoaded || !usersLoadedForSite.equals(siteId))
-			if(reportParams.getWho().equals(StatsManager.WHO_CUSTOM))
-				processLoadUsers(null);
-			else
-				return new ArrayList<SelectItem>();
+		if(reportParams.getWho().equals(StatsManager.WHO_CUSTOM))
+			processLoadUsers(null);
+		else if(!usersLoaded || !usersLoadedForSite.equals(serviceBean.getSite()))
+			return new ArrayList<SelectItem>();
 		return siteUsers;
 	}
 	
