@@ -186,8 +186,8 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Stats
 					if(registeredEvents.contains(e.getEvent()) && isValidEvent(e)){						
 						if(!M_sm.isCollectAdminEvents() && userId.equals("admin")) return;
 						doUpdate(e, userId, siteId, eventDateTime);
-						LOG.info("Statistics updated for '"+e.getEvent()+"' ("+e.toString()+") USER_ID: "+userId);
-					} else LOG.info("Event ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
+						LOG.debug("Statistics updated for '"+e.getEvent()+"' ("+e.toString()+") USER_ID: "+userId);
+					} else LOG.debug("Event ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
 			
 				
 				
