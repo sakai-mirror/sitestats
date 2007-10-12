@@ -1803,25 +1803,30 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 			String fDateStr = "";
 			if(M_sql.getVendor().equals("oracle")){
 				if(iDate != null)
-					iDateStr = "and s.VISITS_DATE >= :idate ";
+					iDateStr = "and es.EVENT_DATE >= :idate ";
 				if(fDate != null)
-					fDateStr = "and s.VISITS_DATE < :fdate ";
+					fDateStr = "and es.EVENT_DATE < :fdate ";
 			}else{
 				if(iDate != null)
-					iDateStr = "and s.date >= :idate ";
+					iDateStr = "and es.date >= :idate ";
 				if(fDate != null)
-					fDateStr = "and s.date < :fdate ";
+					fDateStr = "and es.date < :fdate ";
 			}
-			final String hql = "select s.siteId, sum(s.totalVisits), sum(s.totalUnique), year(s.date), month(s.date) " + 
-					"from SiteVisitsImpl as s " +
-					"where s.siteId = :siteid " +
-					iDateStr + fDateStr +
-					"group by s.siteId, year(s.date), month(s.date)";
-			final String oracleSql = "select s.SITE_ID as actSiteId, sum(s.TOTAL_VISITS) as actVisits, sum(s.TOTAL_UNIQUE) as actUnique, to_char(s.VISITS_DATE,'YYYY') as actYear, to_char(s.VISITS_DATE,'MM') as actMonth " + 
-				"from SST_SITEVISITS s " +
-				"where s.SITE_ID = :siteid " +
+			final String hql = "select es.siteId, sum(es.count) ,count(distinct es.userId), year(es.date), month(es.date)"+
+				"from EventStatImpl as es " +
+				"where es.siteId = :siteid " +
 				iDateStr + fDateStr +
-				"group by s.SITE_ID, to_char(s.VISITS_DATE,'YYYY'), to_char(s.VISITS_DATE,'MM')";
+				"  and es.userId != '?' " +
+				"  and es.eventId = '"+SITEVISIT_EVENTID+"' " +
+				"group by es.siteId, year(es.date), month(es.date)";
+			final String oracleSql = "select es.SITE_ID as actSiteId, sum(es.EVENT_COUNT) as actVisits, count(distinct es.USER_ID) as actUnique, "+
+				"  to_char(es.EVENT_DATE,'YYYY') as actYear, to_char(es.EVENT_DATE,'MM') as actMonth "+
+				"from SST_EVENTS es " +
+				"where es.SITE_ID = :siteid " +
+				iDateStr + fDateStr +
+				"  and es.USER_ID != '?' " +
+				"  and es.EVENT_ID = '"+SITEVISIT_EVENTID+"' " + 
+				"group by es.SITE_ID,to_char(es.EVENT_DATE,'YYYY'), to_char(es.EVENT_DATE,'MM')";
 			
 			HibernateCallback hcb = new HibernateCallback() {
 				public Object doInHibernate(Session session) throws HibernateException, SQLException {
@@ -1864,7 +1869,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 							}else{
 								c.setSiteId((String)s[0]);
 								c.setTotalVisits(((Long)s[1]).longValue());
-								c.setTotalUnique(((Long)s[2]).longValue());
+								c.setTotalUnique(((Integer)s[2]).intValue());
 								cal.set(Calendar.YEAR, ((Integer)s[3]).intValue());
 								cal.set(Calendar.MONTH, ((Integer)s[4]).intValue() - 1);
 							}							
