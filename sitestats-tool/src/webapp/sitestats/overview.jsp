@@ -44,7 +44,7 @@
 			
 			<%/* #####  VISITS  ##### */%>
 			<t:htmlTag value="h4" styleClass="summaryHeader">
-				<h:outputText value="#{msgs.overview_title_visits_sum}"/>
+				<h:outputText value="#{msgs.overview_title_visits}"/>
 			</t:htmlTag>
 			<h:panelGrid id="visitsMainArea" styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
 				<a4j:region id="visitsChartRegion">
@@ -118,7 +118,7 @@
 			
 			<%/* #####  ACTIVITY  ##### */%>
 			<t:htmlTag value="h4" styleClass="summaryHeader">
-				<h:outputText value="#{msgs.overview_title_activity_sum}"/>
+				<h:outputText value="#{msgs.overview_title_activity}"/>
 			</t:htmlTag>
 			<h:panelGrid styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
 				<a4j:region id="activityChartRegion">
