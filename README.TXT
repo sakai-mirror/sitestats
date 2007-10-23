@@ -80,12 +80,7 @@ Please see http://bugs.sakaiproject.org/confluence/display/STAT for detailed inf
 
 6. Known bugs/issues in SiteStats 1.0.0
 ============================================
-Issues related with Sakai 2.4.x / trunk (pre_2-4):
-	- Email archive: unable to process email attachments (no reference to site id);
-	- Polls (SAK-10410): Fix wrong siteId in 'poll.vote' events
-	- Gradebook (SAK-10802): Logged events don't include context (siteId) (links to SAK-6207)
-	- Assignments (SAK-10806): Event asn.read not logged for Student/access role
-	- Podcast (SAK-10807): Logged event for 'podcast.add' don't include context (siteId)
+For up-to-date information, please see http://bugs.sakaiproject.org/confluence/display/STAT/Features.
 
 
 7. Contact
