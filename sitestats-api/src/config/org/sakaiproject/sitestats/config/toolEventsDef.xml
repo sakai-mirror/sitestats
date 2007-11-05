@@ -161,6 +161,7 @@
 		<event eventId="poll.add" selected="true"/>
 		<event eventId="poll.update" selected="true"/>
 		<event eventId="poll.delete" selected="true"/>
+		<event eventId="poll.viewResult" selected="true"/> <!-- sakai 2.5+ -->
 		<eventParserTip for="contextId" separator="/" index="2"/>
 	</tool>	
 
@@ -175,6 +176,16 @@
 		<event eventId="content.revise" selected="true"/>
 		<event eventId="content.delete" selected="true"/>
 		<eventParserTip for="contextId" separator="/" index="3"/>
+	</tool>
+
+
+	<!-- roster (available in sakai 2.5.x) -->
+	<tool 
+		toolId="sakai.site.roster"
+		selected="false">
+		<event eventId="roster.view" selected="true"/>
+		<event eventId="roster.view.photos" selected="true"/>
+		<eventParserTip for="contextId" separator="/" index="2"/>
 	</tool>
 	
 	
