@@ -92,31 +92,8 @@ public class OverviewBean {
 	private SummaryActivityTotals				summaryActivityTotals	= null;
 
 	/** Utility */
-	private final static Map<Integer, String>	weekDaysMap				= new HashMap<Integer, String>();
-	static{
-		weekDaysMap.put(Calendar.SUNDAY, msgs.getString("day_sun"));
-		weekDaysMap.put(Calendar.MONDAY, msgs.getString("day_mon"));
-		weekDaysMap.put(Calendar.TUESDAY, msgs.getString("day_tue"));
-		weekDaysMap.put(Calendar.WEDNESDAY, msgs.getString("day_wed"));
-		weekDaysMap.put(Calendar.THURSDAY, msgs.getString("day_thu"));
-		weekDaysMap.put(Calendar.FRIDAY, msgs.getString("day_fri"));
-		weekDaysMap.put(Calendar.SATURDAY, msgs.getString("day_sat"));
-	}
-	private final static Map<Integer, String>	monthNamesMap			= new HashMap<Integer, String>();
-	static{
-		monthNamesMap.put(Calendar.JANUARY, msgs.getString("mo_jan"));
-		monthNamesMap.put(Calendar.FEBRUARY, msgs.getString("mo_feb"));
-		monthNamesMap.put(Calendar.MARCH, msgs.getString("mo_mar"));
-		monthNamesMap.put(Calendar.APRIL, msgs.getString("mo_apr"));
-		monthNamesMap.put(Calendar.MAY, msgs.getString("mo_may"));
-		monthNamesMap.put(Calendar.JUNE, msgs.getString("mo_jun"));
-		monthNamesMap.put(Calendar.JULY, msgs.getString("mo_jul"));
-		monthNamesMap.put(Calendar.AUGUST, msgs.getString("mo_ago"));
-		monthNamesMap.put(Calendar.SEPTEMBER, msgs.getString("mo_sep"));
-		monthNamesMap.put(Calendar.OCTOBER, msgs.getString("mo_oct"));
-		monthNamesMap.put(Calendar.NOVEMBER, msgs.getString("mo_nov"));
-		monthNamesMap.put(Calendar.DECEMBER, msgs.getString("mo_dec"));
-	}
+	private final Map<Integer, String>	weekDaysMap				= new HashMap<Integer, String>();
+	private final Map<Integer, String>	monthNamesMap			= new HashMap<Integer, String>();
 
 	/** Benas, Services */
 	private transient ServiceBean				serviceBean				= null;
@@ -370,8 +347,8 @@ public class OverviewBean {
 		long visitsData[] = svc.getVisits();
 		long uniqueVisitsData[] = svc.getUniqueVisits();
 		for(int i = 0; i < visitsData.length; i++){
-			visitsWeekDataSet.addValue(visitsData[i], visits, weekDaysMap.get(currDay.get(Calendar.DAY_OF_WEEK)));
-			visitsWeekDataSet.addValue(uniqueVisitsData[i], uniqueVisits, weekDaysMap.get(currDay.get(Calendar.DAY_OF_WEEK)));
+			visitsWeekDataSet.addValue(visitsData[i], visits, getWeekDaysMap().get(currDay.get(Calendar.DAY_OF_WEEK)));
+			visitsWeekDataSet.addValue(uniqueVisitsData[i], uniqueVisits, getWeekDaysMap().get(currDay.get(Calendar.DAY_OF_WEEK)));
 			currDay.add(Calendar.DAY_OF_YEAR, 1);
 		}
 		return visitsWeekDataSet;
@@ -421,8 +398,8 @@ public class OverviewBean {
 		long visitsData[] = svc.getVisits();
 		long uniqueVisitsData[] = svc.getUniqueVisits();
 		for(int i = 0; i < visitsData.length; i++){
-			visitsYearDataSet.addValue(visitsData[i], visits, monthNamesMap.get(currMonth.get(Calendar.MONTH)));
-			visitsYearDataSet.addValue(uniqueVisitsData[i], uniqueVisits, monthNamesMap.get(currMonth.get(Calendar.MONTH)));
+			visitsYearDataSet.addValue(visitsData[i], visits, getMonthNamesMap().get(currMonth.get(Calendar.MONTH)));
+			visitsYearDataSet.addValue(uniqueVisitsData[i], uniqueVisits, getMonthNamesMap().get(currMonth.get(Calendar.MONTH)));
 			currMonth.add(Calendar.MONTH, 1);
 		}
 		return visitsYearDataSet;
@@ -498,7 +475,7 @@ public class OverviewBean {
 
 		long activityData[] = sac.getActivity();
 		for(int i = 0; i < activityData.length; i++){
-			activityWeekBarDataSet.addValue(activityData[i], activity, weekDaysMap.get(currDay.get(Calendar.DAY_OF_WEEK)));
+			activityWeekBarDataSet.addValue(activityData[i], activity, getWeekDaysMap().get(currDay.get(Calendar.DAY_OF_WEEK)));
 			currDay.add(Calendar.DAY_OF_YEAR, 1);
 		}
 		return activityWeekBarDataSet;
@@ -543,7 +520,7 @@ public class OverviewBean {
 
 		long activityData[] = sac.getActivity();
 		for(int i = 0; i < activityData.length; i++){
-			activityYearBarDataSet.addValue(activityData[i], activity, monthNamesMap.get(currMonth.get(Calendar.MONTH)));
+			activityYearBarDataSet.addValue(activityData[i], activity, getMonthNamesMap().get(currMonth.get(Calendar.MONTH)));
 			currMonth.add(Calendar.MONTH, 1);
 		}
 		
@@ -667,4 +644,32 @@ public class OverviewBean {
 			else return 0;
 		}		
 	}
+	
+	private Map<Integer, String> getWeekDaysMap(){
+		weekDaysMap.put(Calendar.SUNDAY, msgs.getString("day_sun"));
+		weekDaysMap.put(Calendar.MONDAY, msgs.getString("day_mon"));
+		weekDaysMap.put(Calendar.TUESDAY, msgs.getString("day_tue"));
+		weekDaysMap.put(Calendar.WEDNESDAY, msgs.getString("day_wed"));
+		weekDaysMap.put(Calendar.THURSDAY, msgs.getString("day_thu"));
+		weekDaysMap.put(Calendar.FRIDAY, msgs.getString("day_fri"));
+		weekDaysMap.put(Calendar.SATURDAY, msgs.getString("day_sat"));
+		return weekDaysMap;
+	}
+	
+	private Map<Integer, String> getMonthNamesMap(){
+		monthNamesMap.put(Calendar.JANUARY, msgs.getString("mo_jan"));
+		monthNamesMap.put(Calendar.FEBRUARY, msgs.getString("mo_feb"));
+		monthNamesMap.put(Calendar.MARCH, msgs.getString("mo_mar"));
+		monthNamesMap.put(Calendar.APRIL, msgs.getString("mo_apr"));
+		monthNamesMap.put(Calendar.MAY, msgs.getString("mo_may"));
+		monthNamesMap.put(Calendar.JUNE, msgs.getString("mo_jun"));
+		monthNamesMap.put(Calendar.JULY, msgs.getString("mo_jul"));
+		monthNamesMap.put(Calendar.AUGUST, msgs.getString("mo_ago"));
+		monthNamesMap.put(Calendar.SEPTEMBER, msgs.getString("mo_sep"));
+		monthNamesMap.put(Calendar.OCTOBER, msgs.getString("mo_oct"));
+		monthNamesMap.put(Calendar.NOVEMBER, msgs.getString("mo_nov"));
+		monthNamesMap.put(Calendar.DECEMBER, msgs.getString("mo_dec"));
+		return monthNamesMap;
+	}
+	
 }

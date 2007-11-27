@@ -1,26 +1,22 @@
 package org.sakaiproject.sitestats.impl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.sitestats.api.EventInfo;
+import org.sakaiproject.tool.cover.SessionManager;
+import org.sakaiproject.util.ResourceLoader;
+
 
 public class EventInfoImpl implements EventInfo {
-	private String eventId;
-	private String eventName;
-	private boolean selected;
+	private String			bundleName	= "org.sakaiproject.sitestats.impl.bundle.Messages";
+	private ResourceLoader	msgs		= new ResourceLoader(bundleName);
+	private Log				LOG			= LogFactory.getLog(EventInfoImpl.class);
+	private String			eventId;
+	private String			eventName;
+	private boolean			selected;
 	
 	public EventInfoImpl(String eventId) {
 		this.eventId = eventId;
-	}
-	
-	public EventInfoImpl(String eventId, String eventName) {
-		this.eventId = eventId;
-		this.eventName = eventName;
-	}
-	
-	public EventInfoImpl(String eventId, String eventName, boolean selected) {
-		super();
-		this.eventId = eventId;
-		this.eventName = eventName;
-		this.selected = selected;
 	}
 
 	/* (non-Javadoc)
@@ -41,6 +37,12 @@ public class EventInfoImpl implements EventInfo {
 	 * @see org.sakaiproject.sitestats.api.EventInfo#getEventName()
 	 */
 	public String getEventName() {
+		try{
+			eventName = msgs.getString(getEventId().trim());
+		}catch(RuntimeException e){
+			eventName = getEventId().trim();
+			LOG.info("No translation found for eventId: " + eventId.trim() + ". Please specify it in sitestats/sitestats-impl/impl/src/bundle/org/sakaiproject/sitestats/impl/bundle/");
+		}
 		return eventName;
 	}
 

@@ -82,6 +82,7 @@ import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserDirectoryService;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.util.ResourceLoader;
 import org.sakaiproject.util.Validator;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.orm.hibernate3.HibernateCallback;
@@ -94,7 +95,8 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  */
 public class StatsManagerImpl extends HibernateDaoSupport implements StatsManager {
 	private Log							LOG										= LogFactory.getLog(StatsManagerImpl.class);
-	protected ResourceBundle			msgs									= ResourceBundle.getBundle("org.sakaiproject.sitestats.impl.bundle.Messages");
+	private static String				bundleName								= "org.sakaiproject.sitestats.impl.bundle.Messages";
+	private static ResourceLoader		msgs									= new ResourceLoader(bundleName);
 
 	/** Spring bean members */
 	private String						customToolEventsDefinitionFile			= null;

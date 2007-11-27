@@ -1,18 +1,12 @@
 package org.sakaiproject.sitestats.impl;
 
-import java.util.ResourceBundle;
-
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.ObjectCreationFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.sakaiproject.sitestats.api.EventParserTip;
 import org.sakaiproject.sitestats.api.EventParserTipFactory;
 import org.xml.sax.Attributes;
 
 public class EventParserTipFactoryImpl implements EventParserTipFactory, ObjectCreationFactory {
-	protected ResourceBundle	msgs	= ResourceBundle.getBundle("org.sakaiproject.sitestats.impl.bundle.Messages");
-	private Log					LOG		= LogFactory.getLog(EventParserTipFactoryImpl.class);
 
 	public EventParserTip createEventParserTip() {
 		return new EventParserTipImpl();

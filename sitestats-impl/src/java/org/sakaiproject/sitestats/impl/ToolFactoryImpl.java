@@ -1,17 +1,15 @@
 package org.sakaiproject.sitestats.impl;
 
 import java.util.List;
-import java.util.ResourceBundle;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.digester.ObjectCreationFactory;
-import org.sakaiproject.sitestats.api.ToolInfo;
 import org.sakaiproject.sitestats.api.ToolFactory;
+import org.sakaiproject.sitestats.api.ToolInfo;
 import org.xml.sax.Attributes;
 
 
 public class ToolFactoryImpl implements ToolFactory, ObjectCreationFactory {
-	protected ResourceBundle	msgs	= ResourceBundle.getBundle("org.sakaiproject.sitestats.impl.bundle.Messages");
 
 	public ToolInfo createTool(String toolId) {
 		return new ToolInfoImpl(toolId);
