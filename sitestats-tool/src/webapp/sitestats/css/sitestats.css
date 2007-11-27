@@ -12,6 +12,8 @@
 
 .left {
 	text-align: left;
+	float: left;
+	width: 100%
 }
 
 .center {
@@ -20,6 +22,8 @@
 
 .right {
 	text-align: right;
+	float: right;
+	width: 100%;
 }
 
 .top {

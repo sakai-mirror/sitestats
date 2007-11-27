@@ -124,7 +124,7 @@
 				<a4j:region id="activityChartRegion">
 						<%/* #####  ACTIVITY CHART SELECTORS  ##### */%>
 						<a4j:outputPanel id="activitySelectors">					
-								<t:div styleClass="left" style="position: absolute">
+								<t:div styleClass="left" style="width: 70%">
 									<a4j:commandLink id="activityWeekSel" value="#{msgs.submenu_week}" actionListener="#{ChartParams.selectActivityWeekView}" rendered="#{ChartParams.selectedActivityView ne 'week'}"
 					                	status="activityChartStatus" reRender="activitySelectors,activityChartPanel" styleClass="selector"
 			                			oncomplete="setActivityChartRenderFalse()"/>
@@ -146,7 +146,7 @@
 									
 									<a4j:status id="activityChartStatus" startText="..." stopText=" " startStyleClass="ajaxLoading"/>	            		
 								</t:div>
-								<t:div styleClass="right">
+								<t:div styleClass="right" style="width: 30%">
 									<a4j:commandLink id="activityPieSel" value="#{msgs.submenu_byTool}" actionListener="#{ChartParams.selectActivityPieChart}" rendered="#{ChartParams.selectedActivityChartType ne 'pie'}"
 					                	status="activityChartStatus" reRender="activitySelectors,activityChartPanel" styleClass="selector"
 			                			oncomplete="setActivityChartRenderFalse()"/>
@@ -222,7 +222,7 @@
 		<a4j:jsFunction name="renderActivityChart"
 			actionListener="#{ChartParams.renderActivityChart}"
 		    reRender="activitySelectors,activityChartPanel" status="activityChartStatus"
-		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 640);">  
+		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 642);">  
 		    <a4j:actionparam name="chartWidth"/>
 		   	<a4j:actionparam name="chartHeight"/>
 		    <a4j:actionparam name="backgroundColor"/>          
