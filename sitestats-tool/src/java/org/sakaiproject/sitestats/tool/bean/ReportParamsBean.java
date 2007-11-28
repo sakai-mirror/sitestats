@@ -1,6 +1,7 @@
 package org.sakaiproject.sitestats.tool.bean;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -24,6 +25,14 @@ public class ReportParamsBean implements ReportParams {
 
 	
 	public ReportParamsBean(){
+		whenFrom = new Date();
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.DAY_OF_MONTH, -1);
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		whenFrom = c.getTime();
+		whenTo = new Date();
 	}
 	
 	public ReportParamsBean(String what, List<String> whatToolIds, List<String> whatEventIds, String whatResourceAction, List<String> whatResourceIds, String when, Date whenFrom, Date whenTo, String who, String whoRoleId, String whoGroupId, List<String> whoUserIds) {
