@@ -40,6 +40,10 @@
 			<!-- Tool event definition file: remove support for entire Tools or subset of Tool events -->
 			<!-- <property name="toolEventsRemoveDefinitionFile" value="${sakai.home}/toolEventsRemoveDef.xml" /> -->
 			
+			<!-- Force enable/disable site visits if SAK-8499 is solved.
+				Probably don't need to cahnge: by default, this is true if display.users.present=true in sakai.properties -->			
+			<!-- <property name="enableSiteVisits" value="true" /> -->
+			
 			<!-- Default chart background color (default: white) -->
 			<property name="chartBackgroundColor" value="#ffffff" />
 			

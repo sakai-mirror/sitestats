@@ -68,6 +68,8 @@ public interface StatsManager {
 	public String getToolEventsAddDefinitionFile();
 	
 	public String getToolEventsRemoveDefinitionFile();
+		
+	public boolean isEnableSiteVisits();
 	
 	public String getChartBackgroundColor();
 	

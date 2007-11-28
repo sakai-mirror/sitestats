@@ -43,10 +43,11 @@
 		<t:div style="width:100%">
 			
 			<%/* #####  VISITS  ##### */%>
-			<t:htmlTag value="h4" styleClass="summaryHeader">
+			<t:htmlTag value="h4" styleClass="summaryHeader" rendered="#{ServiceBean.siteVisitsEnabled}">
 				<h:outputText value="#{msgs.overview_title_visits}"/>
 			</t:htmlTag>
-			<h:panelGrid id="visitsMainArea" styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
+			<h:panelGrid id="visitsMainArea" styleClass="sectionContainerNav" style="width:100%" 
+				columns="2" columnClasses="halfSize,halfSize" rendered="#{ServiceBean.siteVisitsEnabled}">
 				<a4j:region id="visitsChartRegion">
 						<%/* #####  VISITS CHART SELECTORS  ##### */%>
 						<a4j:outputPanel id="visitsSelectors">					
@@ -120,7 +121,7 @@
 			<t:htmlTag value="h4" styleClass="summaryHeader">
 				<h:outputText value="#{msgs.overview_title_activity}"/>
 			</t:htmlTag>
-			<h:panelGrid styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
+			<h:panelGrid id="activityMainArea" styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
 				<a4j:region id="activityChartRegion">
 						<%/* #####  ACTIVITY CHART SELECTORS  ##### */%>
 						<a4j:outputPanel id="activitySelectors">					
@@ -255,7 +256,7 @@
 		<f:verbatim>
 	       	<script type="text/javascript">
 	       		function getMainAreaWidth(){
-	       			return document.getElementById('overviewForm:visitsMainArea').offsetWidth - 10;
+	       			return document.getElementById('overviewForm:activityMainArea').offsetWidth - 10;
 	       		}
 	       		function getChartWidth(){
 	       			//return document.getElementById('overviewForm:left').offsetWidth;
@@ -289,12 +290,19 @@
 	       	</script>
 		</f:verbatim>	
 		
-		<f:subview id="partialLoader">
+		<f:subview id="visitsPartialLoader" rendered="#{ServiceBean.siteVisitsEnabled}">
 			<f:verbatim>
 	        	<script type="text/javascript">
 	        		//renderVisitsChart(getChartWidth(), getChartHeight(), getBodyBackgroundColor());
 	        		renderVisitsChart(getChartWidth(), getChartHeight(), 'white');
 	        		renderVisitsTable();
+	        	</script>
+			</f:verbatim>
+		</f:subview>	
+		
+		<f:subview id="activityPartialLoader">
+			<f:verbatim>
+	        	<script type="text/javascript">
                   	renderActivityChart(getChartWidth(), getChartHeight(), 'white');
                   	renderActivityTable();
 	        	</script>

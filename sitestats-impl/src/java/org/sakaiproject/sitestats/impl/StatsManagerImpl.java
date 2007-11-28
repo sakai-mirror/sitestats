@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.apache.commons.digester.Digester;
 import org.apache.commons.logging.Log;
@@ -59,8 +58,8 @@ import org.sakaiproject.site.api.SitePage;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.site.api.ToolConfiguration;
 import org.sakaiproject.sitestats.api.CommonStatGrpByDate;
-import org.sakaiproject.sitestats.api.EventInfo;
 import org.sakaiproject.sitestats.api.EventFactory;
+import org.sakaiproject.sitestats.api.EventInfo;
 import org.sakaiproject.sitestats.api.EventStat;
 import org.sakaiproject.sitestats.api.Prefs;
 import org.sakaiproject.sitestats.api.PrefsData;
@@ -75,8 +74,8 @@ import org.sakaiproject.sitestats.api.SummaryActivityChartData;
 import org.sakaiproject.sitestats.api.SummaryActivityTotals;
 import org.sakaiproject.sitestats.api.SummaryVisitsChartData;
 import org.sakaiproject.sitestats.api.SummaryVisitsTotals;
-import org.sakaiproject.sitestats.api.ToolInfo;
 import org.sakaiproject.sitestats.api.ToolFactory;
+import org.sakaiproject.sitestats.api.ToolInfo;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.tool.api.ToolManager;
 import org.sakaiproject.user.api.User;
@@ -99,6 +98,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	private static ResourceLoader		msgs									= new ResourceLoader(bundleName);
 
 	/** Spring bean members */
+	private boolean						enableSiteVisits						= org.sakaiproject.component.cover.ServerConfigurationService.getBoolean("display.users.present", false);
 	private String						customToolEventsDefinitionFile			= null;
 	private String						customToolEventsAddDefinitionFile		= null;
 	private String						customToolEventsRemoveDefinitionFile	= null;
@@ -108,9 +108,9 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	private boolean						itemLabelsVisible						= false;
 
 	/** Controller fields */
-	private List<ToolInfo>					toolEventsDefinition					= null;
+	private List<ToolInfo>				toolEventsDefinition					= null;
 	private List<String>				toolEventIds							= null;
-	private Map<String,ToolInfo>			eventIdToolMap;
+	private Map<String,ToolInfo>		eventIdToolMap;
 	private boolean						showAnonymousEvents						= false;
 
 	/** Sakai services */
@@ -148,6 +148,14 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	
 	public String getToolEventsRemoveDefinitionFile() {
 		return customToolEventsRemoveDefinitionFile;
+	}
+	
+	public void setEnableSiteVisits(boolean enableSiteVisits) {
+		this.enableSiteVisits = enableSiteVisits;
+	}
+	
+	public boolean isEnableSiteVisits() {
+		return enableSiteVisits;
 	}
 	
 	public void setChartBackgroundColor(String color) {
@@ -225,11 +233,8 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 		}
 		
 		loadToolEventsDefinitionFile();
-		logger.info("init(): - charts background color: " + chartBackgroundColor);
-		logger.info("init(): - charts in 3D: " + chartIn3D);
-		logger.info("init(): - charts transparency: " + chartTransparency);
-		logger.info("init(): - item labels visible on bar charts: " + itemLabelsVisible);
-		
+		logger.info("init(): - (site visits enabled, charts background color, charts in 3D, charts transparency, item labels visible on bar charts) : " +
+								enableSiteVisits+','+chartBackgroundColor+','+chartIn3D+','+chartTransparency+','+itemLabelsVisible);		
 	}
 
 

@@ -285,6 +285,10 @@ public class ServiceBean {
 			return "sitelist";
 		}
 	}
+
 	
+	public boolean getSiteVisitsEnabled() {
+		return SST_sm.isEnableSiteVisits();
+	}
 	
 }

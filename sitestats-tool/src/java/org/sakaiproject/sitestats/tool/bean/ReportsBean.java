@@ -149,6 +149,8 @@ public class ReportsBean {
 	
 	public void setReportParams(ReportParams reportParams) {
 		this.reportParams = reportParams;
+		if(!serviceBean.getSiteVisitsEnabled())
+			this.reportParams.setWhat(StatsManager.WHAT_EVENTS_BYTOOL);
 	}
 
 	// ################################################################

@@ -72,8 +72,10 @@
 		       
 			<h:panelGrid styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="halfSize,halfSize">
 				<%-- Visits --%>
-				<t:radio index="0" for="what"/>
-				<t:outputText value=""/>
+				<t:htmlTag id="what-visits-option" value="span">
+					<t:radio index="0" for="what"/>
+				</t:htmlTag>
+                <t:outputText  id="what-visits-spacer" value=""/>
 				
 				<%-- Events --%>
 				<t:div>
@@ -230,6 +232,17 @@
 		</t:div>
 	    
 	</h:form>
+	
+	
+	<f:subview id="hideVisits" rendered="#{!ServiceBean.siteVisitsEnabled}">
+        <f:verbatim>
+            <script type="text/javascript">
+                document.getElementById('reportsForm:what-visits-option').style.display = 'none';
+                document.getElementById('reportsForm:what-visits-spacer').style.display = 'none';
+                document.getElementsByName('reportsForm:what')[1].checked = true;
+            </script>
+        </f:verbatim>
+    </f:subview>	
 	
     <f:verbatim>
 		<script type="text/javascript">
