@@ -101,7 +101,7 @@
 				value="#{ReportsBean.report.reportData}"
 				var="row"
 				styleClass="listHier narrowTable"
-				columnClasses="left,left,left,left,left"
+				columnClasses="leftAlign,leftAlign,leftAlign,leftAlign,leftAlign"
 				sortColumn="#{ReportsBean.sortColumn}" 
 	            sortAscending="#{ReportsBean.sortAscending}"
 	            first="#{param.printVersion == 'true' ? 0 : ReportsBean.pagerFirstItem}"
