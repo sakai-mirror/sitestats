@@ -111,7 +111,7 @@
 					<t:outputLabel for="what-resourcesAction" value="#{msgs.report_what_resource_action}"/>
 				</t:div>
 				<t:selectOneMenu id="what-resourcesAction" value="#{ReportsBean.params.whatResourceAction}" 
-					immediate="true" style="display: none" disabled="#{!ReportsBean.selectedLimitedAction}">
+					immediate="true" style="display: none">
 					<f:selectItems value="#{ReportsBean.resourceActions}"/>
 				</t:selectOneMenu>
 				<a4j:outputPanel id="what-resourcesPanel2" layout="block" style="display: none;" styleClass="indnt2">
