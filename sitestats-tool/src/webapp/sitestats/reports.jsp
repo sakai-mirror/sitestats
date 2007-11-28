@@ -200,7 +200,7 @@
 				</t:selectOneMenu>
 				<a4j:outputPanel id="who-custom-ajax">
                 	<a4j:support actionListener="#{ReportsBean.processLoadUsers}"
-                    	event="onchange"
+                    	event="onclick"
                         reRender="who-custom-select"
                         rendered="#{!ReportsBean.usersLoaded}" status="who-custom-status"
                         oncomplete="checkWhoSelection(); setMainFrameHeightNoScroll(window.name);"/>
