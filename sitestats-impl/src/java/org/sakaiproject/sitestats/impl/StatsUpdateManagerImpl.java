@@ -21,7 +21,10 @@ package org.sakaiproject.sitestats.impl;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,30 +59,37 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
  * @author <a href="mailto:nuno@ufp.pt">Nuno Fernandes</a>
  */
 public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runnable, StatsUpdateManager, Observer {
-	private Log						LOG							= LogFactory.getLog(StatsUpdateManagerImpl.class);
-	private final static String		PRESENCE_SUFFIX				= "-presence";
-	private final static int		PRESENCE_SUFFIX_LENGTH		= PRESENCE_SUFFIX.length();
+	private Log								LOG									= LogFactory.getLog(StatsUpdateManagerImpl.class);
+	private final static String				PRESENCE_SUFFIX						= "-presence";
+	private final static int				PRESENCE_SUFFIX_LENGTH				= PRESENCE_SUFFIX.length();
 
 	/** Spring bean members */
-	private boolean					collectThreadEnabled		= true;
-	public long						collectThreadUpdateInterval	= 4000L;
-	private boolean						collectAdminEvents						= false;
-	private boolean						collectEventsForSiteWithToolOnly		= true;
+	private boolean							collectThreadEnabled				= true;
+	public long								collectThreadUpdateInterval			= 4000L;
+	private boolean							collectAdminEvents					= false;
+	private boolean							collectEventsForSiteWithToolOnly	= true;
 
 	/** Sakai services */
-	private StatsManager			M_sm;
-	private SiteService				M_ss;
-	private UsageSessionService		M_uss;
-	private EventTrackingService	M_ets;
+	private StatsManager					M_sm;
+	private SiteService						M_ss;
+	private UsageSessionService				M_uss;
+	private EventTrackingService			M_ets;
 
 	/** Collect Thread and Semaphore */
-	private Thread					collectThread;
-	private List<Event>				collectThreadQueue			= new ArrayList<Event>();
-	private Object					collectThreadSemaphore		= new Object();
-	private boolean					collectThreadRunning		= true;
+	private Thread							collectThread;
+	private List<Event>						collectThreadQueue					= new ArrayList<Event>();
+	private Object							collectThreadSemaphore				= new Object();
+	private boolean							collectThreadRunning				= true;
 
-	private List<String>			registeredEvents			= null;
-	private Map<String, ToolInfo>		eventIdToolMap				= null;
+	/** Collect thread queue maps */
+	private Map<String, EventStat>			eventStatMap						= Collections.synchronizedMap(new HashMap<String, EventStat>());
+	private Map<String, ResourceStat>		resourceStatMap						= Collections.synchronizedMap(new HashMap<String, ResourceStat>());
+	private Map<String, SiteActivity>		activityMap							= Collections.synchronizedMap(new HashMap<String, SiteActivity>());
+	private Map<String, SiteVisits>			visitsMap							= Collections.synchronizedMap(new HashMap<String, SiteVisits>());
+	private Map<UniqueVisitsKey, Integer>	uniqueVisitsMap						= Collections.synchronizedMap(new HashMap<UniqueVisitsKey, Integer>());
+
+	private List<String>					registeredEvents					= null;
+	private Map<String, ToolInfo>			eventIdToolMap						= null;
 
 
 	
@@ -152,7 +162,6 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			startUpdateThread();
 			
 			// add this as EventInfo observer
-			//EventTrackingService.addObserver(this);
 			M_ets.addLocalObserver(this);
 		}
 	}
@@ -204,12 +213,14 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				return;
 			}
 
-			// aggregate event...
-			doUpdate(e, userId, siteId);
-			//LOG.info("Statistics updated for '"+e.getEvent()+"' ("+e.toString()+") USER_ID: "+userId);
+			// consolidate event
+			final Date date = getToday();
+			final String eventId = e.getEvent();
+			final String resourceRef = e.getResource();
+			consolidateEvent(date, eventId, resourceRef, userId, siteId);
 		}//else LOG.info("EventInfo ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#collectEvents(java.util.List)
 	 */
@@ -250,6 +261,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				while(collectThreadQueue.size() > 0){
 					collectEvent(collectThreadQueue.remove(0));
 				}
+				doUpdateConsolidatedEvents();
 				
 				// sleep if no work to do
 				if(!collectThreadRunning) break;
@@ -292,194 +304,282 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 
 	// ################################################################
 	// Update methods
-	// ################################################################
-	private synchronized void doUpdate(Event e, final String userId, final String siteId){		
-		// event details
-		final Date date = getToday();
-		final String event = e.getEvent();
-		final String resource = e.getResource();
-		if(resource.trim().equals("")) return;
-		
-		
+	// ################################################################	
+	private void consolidateEvent(Date date, String eventId, String resourceRef, String userId, String siteId) {
 		// update		
-		if(registeredEvents.contains(event)){			
-			doUpdateEventStat(event, resource, userId, siteId, date, registeredEvents);
-			if(!event.equals("pres.begin")){
-				doUpdateSiteActivity(event, siteId, date, registeredEvents);
+		if(registeredEvents.contains(eventId)){	
+			// add to eventStatMap
+			String key = userId+siteId+eventId+date;
+			synchronized(eventStatMap){
+				EventStat e1 = eventStatMap.get(key);
+				if(e1 == null){
+					e1 = new EventStatImpl();
+					e1.setUserId(userId);
+					e1.setSiteId(siteId);
+					e1.setEventId(eventId);
+					e1.setDate(date);
+				}
+				e1.setCount(e1.getCount() + 1);
+				eventStatMap.put(key, e1);
+			}
+			
+			if(!eventId.equals("pres.begin")){
+				// add to activityMap
+				String key2 = siteId+date+eventId;
+				synchronized(activityMap){
+					SiteActivity e2 = activityMap.get(key2);
+					if(e2 == null){
+						e2 = new SiteActivityImpl();
+						e2.setSiteId(siteId);
+						e2.setDate(date);
+						e2.setEventId(eventId);
+					}
+					e2.setCount(e2.getCount() + 1);
+					activityMap.put(key2, e2);
+				}
 			}
 		}	
-		if(event.startsWith("content.")){
-			doUpdateResourceStat(event, resource, userId, siteId, date);
-		}else if(event.equals("pres.begin")){
-			doUpdateSiteVisits(userId, siteId, date);
+		
+		if(eventId.startsWith("content.")){
+			// add to resourceStatMap
+			String resourceAction = null;
+			try{
+				resourceAction = eventId.split("\\.")[1];
+			}catch(ArrayIndexOutOfBoundsException ex){
+				resourceAction = eventId;
+			}
+			String key = userId+siteId+resourceRef+resourceAction+date;
+			synchronized(resourceStatMap){
+				ResourceStat e1 = resourceStatMap.get(key);
+				if(e1 == null){
+					e1 = new ResourceStatImpl();
+					e1.setUserId(userId);
+					e1.setSiteId(siteId);
+					e1.setResourceRef(resourceRef);
+					e1.setResourceAction(resourceAction);
+					e1.setDate(date);
+				}
+				e1.setCount(e1.getCount() + 1);
+				resourceStatMap.put(key, e1);
+			}
+			
+		}else if(eventId.equals("pres.begin")){
+			// add to visitsMap
+			String key = siteId+date;
+			synchronized(visitsMap){
+				SiteVisits e1 = visitsMap.get(key);
+				if(e1 == null){
+					e1 = new SiteVisitsImpl();
+					e1.setSiteId(siteId);
+					e1.setDate(date);
+				}
+				e1.setTotalVisits(e1.getTotalVisits() + 1);
+				// unique visits are determined when updating to db:
+				//   --> e1.setTotalUnique(totalUnique);
+				visitsMap.put(key, e1);
+			}			
+			UniqueVisitsKey keyUniqueVisits = new UniqueVisitsKey(siteId, date);
+			// place entry on map so we can update unique visits later
+			uniqueVisitsMap.put(keyUniqueVisits, Integer.valueOf(1));
+		}
+	}	
+	
+	@SuppressWarnings("unchecked")
+	private synchronized void doUpdateConsolidatedEvents() {
+		getHibernateTemplate().execute(new HibernateCallback() {			
+			public Object doInHibernate(Session session) throws HibernateException, SQLException {
+				Transaction tx = null;
+				try{
+					tx = session.beginTransaction();
+					// do: EventStat
+					if(eventStatMap.size() > 0) {
+						Collection<EventStat> tmp1 = null;
+						synchronized(eventStatMap){
+							tmp1 = eventStatMap.values();
+							eventStatMap = Collections.synchronizedMap(new HashMap<String, EventStat>());
+						}
+						doUpdateEventStatObjects(session, tmp1);
+					}
+					
+					// do: ResourceStat
+					if(resourceStatMap.size() > 0) {
+						Collection<ResourceStat> tmp2 = null;
+						synchronized(resourceStatMap){
+							tmp2 = resourceStatMap.values();
+							resourceStatMap = Collections.synchronizedMap(new HashMap<String, ResourceStat>());
+						}
+						doUpdateResourceStatObjects(session, tmp2);
+					}
+					
+					// do: SiteActivity
+					if(activityMap.size() > 0) {
+						Collection<SiteActivity> tmp3 = null;
+						synchronized(activityMap){
+							tmp3 = activityMap.values();
+							activityMap = Collections.synchronizedMap(new HashMap<String, SiteActivity>());
+						}
+						doUpdateSiteActivityObjects(session, tmp3);
+					}
+
+					// do: SiteVisits
+					if(uniqueVisitsMap.size() > 0 || visitsMap.size() > 0) {	
+						// determine unique visits for event related sites
+						Map<UniqueVisitsKey, Integer> tmp4;
+						synchronized(uniqueVisitsMap){
+							tmp4 = uniqueVisitsMap;
+							uniqueVisitsMap = Collections.synchronizedMap(new HashMap<UniqueVisitsKey, Integer>());
+						}
+						tmp4 = doGetSiteUniqueVisits(session, tmp4);
+					
+						// do: SiteVisits
+						if(visitsMap.size() > 0) {
+							Collection<SiteVisits> tmp5 = null;
+							synchronized(visitsMap){
+								tmp5 = visitsMap.values();
+								visitsMap = Collections.synchronizedMap(new HashMap<String, SiteVisits>());
+							}
+							doUpdateSiteVisitsObjects(session, tmp5, tmp4);
+						}
+					}
+
+					// commit ALL
+					tx.commit();
+				}catch(Exception e){
+					if(tx != null) tx.rollback();
+					LOG.warn("Unable to commit transaction: ", e);
+				}
+				return null;
+			}			
+		});
+	}
+	
+	private void doUpdateEventStatObjects(Session session, Collection<EventStat> objects) {
+		if(objects == null) return;
+		Iterator<EventStat> i = objects.iterator();
+		while(i.hasNext()){
+			EventStat eUpdate = i.next();
+			Criteria c = session.createCriteria(EventStatImpl.class);
+			c.add(Expression.eq("siteId", eUpdate.getSiteId()));
+			c.add(Expression.eq("eventId", eUpdate.getEventId()));
+			c.add(Expression.eq("userId", eUpdate.getUserId()));
+			c.add(Expression.eq("date", eUpdate.getDate()));
+			EventStat eExisting = null;
+			try{
+				eExisting = (EventStat) c.uniqueResult();
+			}catch(Exception ex){
+				LOG.debug("More than 1 result when unique result expected.", ex);
+				eExisting = (EventStat) c.list().get(0);
+			}
+			if(eExisting == null) 
+				eExisting = eUpdate;
+			else
+				eExisting.setCount(eExisting.getCount() + eUpdate.getCount());
+
+			session.saveOrUpdate(eExisting);
+		}
+	}
+
+	private void doUpdateResourceStatObjects(Session session, Collection<ResourceStat> objects) {
+		if(objects == null) return;
+		Iterator<ResourceStat> i = objects.iterator();
+		while(i.hasNext()){
+			ResourceStat eUpdate = i.next();
+			Criteria c = session.createCriteria(ResourceStatImpl.class);
+			c.add(Expression.eq("siteId", eUpdate.getSiteId()));
+			c.add(Expression.eq("resourceRef", eUpdate.getResourceRef()));
+			c.add(Expression.eq("resourceAction", eUpdate.getResourceAction()));
+			c.add(Expression.eq("userId", eUpdate.getUserId()));
+			c.add(Expression.eq("date", eUpdate.getDate()));
+			ResourceStat eExisting = null;
+			try{
+				eExisting = (ResourceStat) c.uniqueResult();
+			}catch(Exception ex){
+				LOG.debug("More than 1 result when unique result expected.", ex);
+				eExisting = (ResourceStat) c.list().get(0);
+			}
+			if(eExisting == null) 
+				eExisting = eUpdate;
+			else
+				eExisting.setCount(eExisting.getCount() + eUpdate.getCount());
+
+			session.saveOrUpdate(eExisting);
 		}
 	}
 	
-	private synchronized void doUpdateSiteVisits(final String userId, final String siteId, final Date date) {
-		final String hql = "select s.userId " + 
-				"from EventStatImpl as s " +
-				"where s.siteId = :siteid " +
-				"and s.eventId = 'pres.begin' " +
-				"and s.date = :idate " +
-				//"and s.userId != :userid " +
-				"group by s.siteId, s.userId";
-		getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(Session session) throws HibernateException, SQLException {
-				Transaction tx = null;
-				try{
-					tx = session.beginTransaction();
-					// do the work		
-					Criteria c = session.createCriteria(SiteVisitsImpl.class);
-					c.add(Expression.eq("siteId", siteId));
-					c.add(Expression.eq("date", date));
-					SiteVisits entryV = null;
-					try{
-						entryV = (SiteVisits) c.uniqueResult();
-					}catch(Exception ex){
-						LOG.debug("More than 1 result when unique result expected.", ex);
-						entryV = (SiteVisits) c.list().get(0);
-					}
-					if(entryV == null) entryV = new SiteVisitsImpl();
-					
-					Query q = session.createQuery(hql);
-					q.setString("siteid", siteId);
-					q.setDate("idate", getToday());
-					//q.setString("userid", userId);
-					long uniqueVisitors = q.list().size();// + 1;
-					
-					entryV.setSiteId(siteId);
-					entryV.setTotalVisits(entryV.getTotalVisits() + 1);
-					entryV.setTotalUnique(uniqueVisitors);
-					entryV.setDate(date);
-					// save & commit
-					session.saveOrUpdate(entryV);
-					tx.commit();
-				}catch(Exception e){
-					if(tx != null) tx.rollback();
-					LOG.warn("Unable to commit transaction: ", e);
-				}
-				return null;
+	private void doUpdateSiteActivityObjects(Session session, Collection<SiteActivity> objects) {
+		if(objects == null) return;
+		Iterator<SiteActivity> i = objects.iterator();
+		while(i.hasNext()){
+			SiteActivity eUpdate = i.next();
+			Criteria c = session.createCriteria(SiteActivityImpl.class);
+			c.add(Expression.eq("siteId", eUpdate.getSiteId()));
+			c.add(Expression.eq("eventId", eUpdate.getEventId()));
+			c.add(Expression.eq("date", eUpdate.getDate()));
+			SiteActivity eExisting = null;
+			try{
+				eExisting = (SiteActivity) c.uniqueResult();
+			}catch(Exception ex){
+				LOG.debug("More than 1 result when unique result expected.", ex);
+				eExisting = (SiteActivity) c.list().get(0);
 			}
-		});
-	}
+			if(eExisting == null) 
+				eExisting = eUpdate;
+			else
+				eExisting.setCount(eExisting.getCount() + eUpdate.getCount());
 
-	private synchronized void doUpdateResourceStat(final String event, final String ref, final String userId, final String siteId, final Date date) {
-		final String fileName = ref;
-		
-		getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(Session session) throws HibernateException, SQLException {
-				Transaction tx = null;
-				try{
-					tx = session.beginTransaction();
-					// do the work
-					String resourceAction = null;
-					try{
-						resourceAction = event.split("\\.")[1];
-					}catch(ArrayIndexOutOfBoundsException e){
-						resourceAction = event;
-					}
-					Criteria c = session.createCriteria(ResourceStatImpl.class);
-					c.add(Expression.eq("siteId", siteId));
-					c.add(Expression.eq("resourceRef", fileName));
-					c.add(Expression.eq("resourceAction", resourceAction));
-					c.add(Expression.eq("userId", userId));
-					c.add(Expression.eq("date", date));
-					ResourceStat entryR = null;
-					try{
-						entryR = (ResourceStat) c.uniqueResult();
-					}catch(Exception ex){
-						LOG.debug("More than 1 result when unique result expected.", ex);
-						entryR = (ResourceStat) c.list().get(0);
-					}
-					if(entryR == null) entryR = new ResourceStatImpl();
-					entryR.setSiteId(siteId);
-					entryR.setUserId(userId);
-					entryR.setResourceRef(fileName);
-					entryR.setResourceAction(resourceAction);
-					entryR.setCount(entryR.getCount() + 1);
-					entryR.setDate(date);
-					// save & commit
-					session.saveOrUpdate(entryR);
-					tx.commit();
-				}catch(Exception e){
-					if(tx != null) tx.rollback();
-					LOG.warn("Unable to commit transaction: ", e);
-				}
-				return null;
-			}
-		});
+			session.saveOrUpdate(eExisting);
+		}
 	}
-
-	private synchronized void doUpdateSiteActivity(final String event, final String siteId, final Date date, List<String> registeredEvents) {
-		getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(Session session) throws HibernateException, SQLException {
-				Transaction tx = null;
-				try{
-					tx = session.beginTransaction();
-					// do the work
-					Criteria c = session.createCriteria(SiteActivityImpl.class);
-					c.add(Expression.eq("siteId", siteId));
-					c.add(Expression.eq("eventId", event));
-					c.add(Expression.eq("date", date));
-					SiteActivity entryA = null;
-					try{
-						entryA = (SiteActivity) c.uniqueResult();
-					}catch(Exception ex){
-						LOG.debug("More than 1 result when unique result expected.", ex);
-						entryA = (SiteActivity) c.list().get(0);
-					}
-					if(entryA == null) entryA = new SiteActivityImpl();
-					entryA.setSiteId(siteId);
-					entryA.setEventId(event);
-					entryA.setCount(entryA.getCount() + 1);
-					entryA.setDate(date);
-					// save & commit
-					session.saveOrUpdate(entryA);
-					tx.commit();
-				}catch(Exception e){
-					if(tx != null) tx.rollback();
-					LOG.warn("Unable to commit transaction: ", e);
-				}
-				return null;
+	
+	private void doUpdateSiteVisitsObjects(Session session, Collection<SiteVisits> objects, Map<UniqueVisitsKey, Integer> map) {
+		if(objects == null) return;
+		Iterator<SiteVisits> i = objects.iterator();
+		while(i.hasNext()){
+			SiteVisits eUpdate = i.next();
+			Criteria c = session.createCriteria(SiteVisitsImpl.class);
+			c.add(Expression.eq("siteId", eUpdate.getSiteId()));
+			c.add(Expression.eq("date", eUpdate.getDate()));
+			SiteVisits eExisting = null;
+			try{
+				eExisting = (SiteVisits) c.uniqueResult();
+			}catch(Exception ex){
+				LOG.debug("More than 1 result when unique result expected.", ex);
+				eExisting = (SiteVisits) c.list().get(0);
 			}
-		});
+			if(eExisting == null){
+				eExisting = eUpdate;
+			}else{
+				eExisting.setTotalVisits(eExisting.getTotalVisits() + eUpdate.getTotalVisits());
+			}
+			Integer mapUV = map.get(new UniqueVisitsKey(eExisting.getSiteId(), eExisting.getDate()));
+			eExisting.setTotalUnique(mapUV == null? 1 : mapUV.longValue());
+
+			session.saveOrUpdate(eExisting);
+		}
 	}
-
-	private synchronized void doUpdateEventStat(final String event, String resource, final String userId, final String siteId, final Date date, List<String> registeredEvents) {
-		getHibernateTemplate().execute(new HibernateCallback() {
-			public Object doInHibernate(Session session) throws HibernateException, SQLException {
-				Transaction tx = null;
-				try{
-					tx = session.beginTransaction();
-					// do the work
-					Criteria c = session.createCriteria(EventStatImpl.class);
-					c.add(Expression.eq("siteId", siteId));
-					c.add(Expression.eq("eventId", event));
-					c.add(Expression.eq("userId", userId));
-					c.add(Expression.eq("date", date));
-					EventStat entryE = null;
-					try{
-						entryE = (EventStat) c.uniqueResult();
-					}catch(Exception ex){
-						LOG.debug("More than 1 result when unique result expected.", ex);
-						entryE = (EventStat) c.list().get(0);
-					}
-					if(entryE == null) entryE = new EventStatImpl();
-					entryE.setSiteId(siteId);
-					entryE.setUserId(userId);
-					entryE.setEventId(event);
-					entryE.setCount(entryE.getCount() + 1);
-					entryE.setDate(date);
-					// save & commit
-					session.saveOrUpdate(entryE);
-					tx.commit();
-				}catch(Exception e){
-					if(tx != null) tx.rollback();
-					LOG.warn("Unable to commit transaction: ", e);
-				}
-				return null;
+	
+	private Map<UniqueVisitsKey, Integer> doGetSiteUniqueVisits(Session session, Map<UniqueVisitsKey, Integer> map) {
+		Iterator<UniqueVisitsKey> i = map.keySet().iterator();
+		while(i.hasNext()){
+			UniqueVisitsKey key = i.next();
+			Query q = session.createQuery("select count(distinct s.userId) " + 
+					"from EventStatImpl as s " +
+					"where s.siteId = :siteid " +
+					"and s.eventId = 'pres.begin' " +
+					"and s.date = :idate");
+			q.setString("siteid", key.siteId);
+			q.setDate("idate", key.date);
+			Integer uv = 1;
+			try{
+				uv = (Integer) q.uniqueResult();
+			}catch(Exception ex){
+				LOG.debug("More than 1 result when unique result expected.", ex);
+				uv = (Integer) q.list().get(0);
 			}
-		});
+			int uniqueVisits = uv == null? 1 : uv.intValue();
+			map.put(key, Integer.valueOf((int)uniqueVisits));			
+		}
+		return map;
 	}
 	
 
@@ -488,7 +588,8 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	// ################################################################	
 	private synchronized boolean isValidEvent(Event e) {
 		if(e.getEvent().startsWith("content")){
-			String ref = e.getResource();			
+			String ref = e.getResource();	
+			if(ref.trim().equals("")) return false;			
 			try{
 				String parts[] = ref.split("\\/");		
 				if(parts[2].equals("user")){
@@ -620,4 +721,37 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		return c.getTime();
 	}
 	
+	private class UniqueVisitsKey {
+		public String siteId;
+		public Date date;
+		
+		public UniqueVisitsKey(String siteId, Date date){
+			this.siteId = siteId;
+			this.date = resetToDay(date);
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if(o instanceof UniqueVisitsKey) {
+				UniqueVisitsKey u = (UniqueVisitsKey) o;
+				return siteId.equals(u.siteId) && date.equals(u.date);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return siteId.hashCode() + date.hashCode();
+		}
+		
+		private Date resetToDay(Date date){
+			Calendar c = Calendar.getInstance();
+			c.setTime(date);
+			c.set(Calendar.HOUR_OF_DAY, 0);
+			c.set(Calendar.MINUTE, 0);
+			c.set(Calendar.SECOND, 0);
+			c.set(Calendar.MILLISECOND, 0);
+			return c.getTime();
+		}
+	}
 }
