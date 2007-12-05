@@ -1,0 +1,7 @@
+This branch is obsolete.
+
+Please see SiteStats Confluence page for information about the 1.0 release:
+http://bugs.sakaiproject.org/confluence/display/STAT/Development+Tasks
+
+The 1.0 release can be obtained from:
+https://source.sakaiproject.org/contrib/ufp/sitestats/tags/sitestats_1-0
