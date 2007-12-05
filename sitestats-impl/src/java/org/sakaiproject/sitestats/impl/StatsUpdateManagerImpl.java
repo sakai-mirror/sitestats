@@ -38,13 +38,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Order;
 import org.sakaiproject.event.api.Event;
 import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.event.api.UsageSessionService;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.sitestats.api.EventParserTip;
 import org.sakaiproject.sitestats.api.EventStat;
+import org.sakaiproject.sitestats.api.JobRun;
 import org.sakaiproject.sitestats.api.ResourceStat;
 import org.sakaiproject.sitestats.api.SiteActivity;
 import org.sakaiproject.sitestats.api.SiteVisits;
@@ -180,66 +183,104 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	// ################################################################
 	// Public methods
 	// ################################################################
-//	public static EventInfo buildEvent(String event, String resource, Date date, String contextId, String userId) {
-//		return new DetailedEvent();
-//	}
+	public Event buildEvent(Date date, String event, String ref, String sessionUser, String sessionId) {
+		return new CustomEventImpl(date, event, ref, sessionUser, sessionId);
+	}
+	
 	
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#collectEvent(org.sakaiproject.event.api.Event)
 	 */
-	public synchronized void collectEvent(Event e) {
-		String userId = e.getUserId();
-		e = fixMalFormedEvents(e);
-		if(registeredEvents.contains(e.getEvent()) && isValidEvent(e)){
-			
-			// site check
-			String siteId = parseSiteId(e);
-			if(siteId == null || M_ss.isUserSite(siteId) || M_ss.isSpecialSite(siteId)){
-				return;
-			}
-			if(isCollectEventsForSiteWithToolOnly()){
-				try {
-					if(M_ss.getSite(siteId).getToolForCommonId(StatsManager.SITESTATS_TOOLID) == null)
-						return;
-				}catch(Exception ex) {
-					// not a valid site
-					return;
-				}
-			}
-			
-			// user check
-			if(userId == null) userId = M_uss.getSession(e.getSessionId()).getUserId();
-			if(!isCollectAdminEvents() && userId.equals("admin")){
-				return;
-			}
-
-			// consolidate event
-			final Date date = getToday();
-			final String eventId = e.getEvent();
-			final String resourceRef = e.getResource();
-			consolidateEvent(date, eventId, resourceRef, userId, siteId);
-		}//else LOG.info("EventInfo ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
+	public synchronized boolean collectEvent(Event e) {
+		preProcessEvent(e);
+		return doUpdateConsolidatedEvents();
 	}
 
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#collectEvents(java.util.List)
 	 */
-	public synchronized void collectEvents(List<Event> events) {
+	public synchronized boolean collectEvents(List<Event> events) {
 		if(events != null) {
 			Iterator<Event> iE = events.iterator();
 			while(iE.hasNext()) {
 				Event e = iE.next();
-				collectEvent(e);
+				preProcessEvent(e);
 			}
 		}
+		return doUpdateConsolidatedEvents();
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#collectEvents(org.sakaiproject.event.api.Event[])
 	 */
-	public synchronized void collectEvents(Event[] events) {
-		for(int i=0; i<events.length; i++)
-			collectEvent(events[i]);
+	public synchronized boolean collectEvents(Event[] events) {
+		for(int i=0; i<events.length; i++){
+			preProcessEvent(events[i]);
+		}
+		return doUpdateConsolidatedEvents();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#saveJobRun(org.sakaiproject.sitestats.api.JobRun)
+	 */
+	public boolean saveJobRun(final JobRun jobRun){
+		Object r = getHibernateTemplate().execute(new HibernateCallback() {			
+			public Object doInHibernate(Session session) throws HibernateException, SQLException {
+				Transaction tx = null;
+				try{
+					tx = session.beginTransaction();
+					session.saveOrUpdate(jobRun);
+					tx.commit();
+				}catch(Exception e){
+					if(tx != null) tx.rollback();
+					LOG.warn("Unable to commit transaction: ", e);
+					return Boolean.FALSE;
+				}
+				return Boolean.TRUE;
+			}			
+		});
+		return ((Boolean) r).booleanValue();
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#getLatestJobRun()
+	 */
+	public JobRun getLatestJobRun() throws Exception {
+		Object r = getHibernateTemplate().execute(new HibernateCallback() {			
+			public Object doInHibernate(Session session) throws HibernateException, SQLException {
+				JobRun jobRun = null;
+				Criteria c = session.createCriteria(JobRunImpl.class);
+				c.setMaxResults(1);
+				c.addOrder(Order.desc("id"));
+				List jobs = c.list();
+				if(jobs != null && jobs.size() > 0){
+					jobRun = (JobRun) jobs.get(0);
+				}
+				return jobRun;
+			}			
+		});
+		return (JobRun) r;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.StatsUpdateManager#getEventDateFromLatestJobRun()
+	 */
+	public Date getEventDateFromLatestJobRun() throws Exception {
+		Object r = getHibernateTemplate().execute(new HibernateCallback() {			
+			public Object doInHibernate(Session session) throws HibernateException, SQLException {
+				Criteria c = session.createCriteria(JobRunImpl.class);
+				c.add(Expression.isNotNull("lastEventDate"));
+				c.setMaxResults(1);
+				c.addOrder(Order.desc("id"));
+				List jobs = c.list();
+				if(jobs != null && jobs.size() > 0){
+					JobRun jobRun = (JobRun) jobs.get(0);
+					return jobRun.getLastEventDate();
+				}
+				return null;
+			}			
+		});
+		return (Date) r;
 	}
 	
 
@@ -259,7 +300,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			while(collectThreadRunning){
 				// do update job
 				while(collectThreadQueue.size() > 0){
-					collectEvent(collectThreadQueue.remove(0));
+					preProcessEvent(collectThreadQueue.remove(0));
 				}
 				doUpdateConsolidatedEvents();
 				
@@ -303,9 +344,48 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 	
 
 	// ################################################################
-	// Update methods
+	// Event process methods
 	// ################################################################	
-	private void consolidateEvent(Date date, String eventId, String resourceRef, String userId, String siteId) {
+	private synchronized void preProcessEvent(Event e) {
+		String userId = e.getUserId();
+		e = fixMalFormedEvents(e);
+		if(registeredEvents.contains(e.getEvent()) && isValidEvent(e)){
+			
+			// site check
+			String siteId = parseSiteId(e);
+			if(siteId == null || M_ss.isUserSite(siteId) || M_ss.isSpecialSite(siteId)){
+				return;
+			}
+			if(isCollectEventsForSiteWithToolOnly()){
+				try {
+					if(M_ss.getSite(siteId).getToolForCommonId(StatsManager.SITESTATS_TOOLID) == null)
+						return;
+				}catch(Exception ex) {
+					// not a valid site
+					return;
+				}
+			}
+			
+			// user check
+			if(userId == null) userId = M_uss.getSession(e.getSessionId()).getUserId();
+			if(!isCollectAdminEvents() && userId.equals("admin")){
+				return;
+			}
+
+			// consolidate event
+			Date date = null;
+			if(e instanceof CustomEventImpl){
+				date = ((CustomEventImpl) e).getDate();
+			}else{
+				date = getToday();
+			}
+			String eventId = e.getEvent();
+			String resourceRef = e.getResource();
+			consolidateEvent(date, eventId, resourceRef, userId, siteId);
+		}//else LOG.info("EventInfo ignored:  '"+e.toString()+"' ("+e.toString()+") USER_ID: "+userId);
+	}
+	
+	private synchronized void consolidateEvent(Date date, String eventId, String resourceRef, String userId, String siteId) {
 		// update		
 		if(registeredEvents.contains(eventId)){	
 			// add to eventStatMap
@@ -382,11 +462,15 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			// place entry on map so we can update unique visits later
 			uniqueVisitsMap.put(keyUniqueVisits, Integer.valueOf(1));
 		}
-	}	
+	}
 	
+
+	// ################################################################
+	// Db update methods
+	// ################################################################	
 	@SuppressWarnings("unchecked")
-	private synchronized void doUpdateConsolidatedEvents() {
-		getHibernateTemplate().execute(new HibernateCallback() {			
+	private synchronized boolean doUpdateConsolidatedEvents() {
+		Object r = getHibernateTemplate().execute(new HibernateCallback() {			
 			public Object doInHibernate(Session session) throws HibernateException, SQLException {
 				Transaction tx = null;
 				try{
@@ -447,10 +531,12 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				}catch(Exception e){
 					if(tx != null) tx.rollback();
 					LOG.warn("Unable to commit transaction: ", e);
+					return Boolean.FALSE;
 				}
-				return null;
+				return Boolean.TRUE;
 			}			
 		});
+		return ((Boolean) r).booleanValue();
 	}
 	
 	private void doUpdateEventStatObjects(Session session, Collection<EventStat> objects) {

@@ -32,6 +32,11 @@
 	        </t:aliasBean>
 	    </h:panelGroup>
 	    
+	    <%/* #####  INFORMATION ABOUT LAST UPDATE ##### */%>
+		<f:subview id="additional-info">
+			<%@include file="inc/additional-info.jsp"%>
+		</f:subview>
+	    
 		
 		<%/* #####  TITLE  ##### */%>
 		<t:htmlTag value="h2">

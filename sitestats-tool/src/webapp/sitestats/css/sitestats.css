@@ -78,6 +78,15 @@ label.indnt1 {
 	margin: 0pt;
 }
 
+.additionalInfo {
+	color: #555555;
+	font-size: 85%;
+	font-weight: normal;
+	margin: 0pt;
+	margin-top: 3px;
+	float: right;
+}
+
 /* Ajax loading */
 .ajaxLoading {
 	background: #ffffff url(../images/ajaxload.gif) no-repeat;

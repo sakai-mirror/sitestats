@@ -31,9 +31,14 @@
 	        </t:aliasBean>
 	    </h:panelGroup>
 	    
+	    <%/* #####  INFORMATION ABOUT LAST UPDATE ##### */%>
+		<f:subview id="additional-info">
+			<%@include file="inc/additional-info.jsp"%>
+		</f:subview>
+	    
 	    
 	    <%/* #####  PRINT  ##### */%>
-	    <t:div rendered="#{!ReportsBean.printVersion}" style="float: right; padding-top: 32px">
+	    <t:div rendered="#{!ReportsBean.printVersion}" style="float: right; padding-top: 12px; clear:both">
 			<h:graphicImage url="/sitestats/images/silk/icons/printer.png" alt="#{msgs.reportres_printversion}"/>
 		    <h:commandLink target="_new" title="#{msgs.reportres_printversion}" >
 				<h:outputText value="#{msgs.reportres_printversion} " />

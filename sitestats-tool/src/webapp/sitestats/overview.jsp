@@ -31,6 +31,10 @@
 	        </t:aliasBean>
 	    </h:panelGroup>
 	    
+	    <%/* #####  INFORMATION ABOUT LAST UPDATE ##### */%>
+		<f:subview id="additional-info">
+			<%@include file="inc/additional-info.jsp"%>
+		</f:subview>
 		
 		<%/* #####  TITLE  ##### */%>
 		<t:htmlTag value="h2">
@@ -204,7 +208,7 @@
 			
 		</t:div>		    
 		
-		
+			
 		
 		<%/* #####  Load data with ajax for the first time  ##### */%>
 		<a4j:jsFunction name="renderVisitsChart"

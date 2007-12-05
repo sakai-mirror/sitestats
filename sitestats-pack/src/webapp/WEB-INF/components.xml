@@ -55,6 +55,10 @@
 			
 			<!-- Show bar charts item labels by default? (default: false) -->
 			<property name="itemLabelsVisible" value="true" />
+			
+			<!-- Show last quartz job run date in tool overview page? 
+				(default: false if collectThreadEnabled@org.sakaiproject.sitestats.api.StatsUpdateManager=true, true otherwise) -->
+			<!-- <property name="lastJobRunDateVisible" value="true" /> -->
 		<!-- /OPTIONS -->
 				
 		
@@ -127,6 +131,45 @@
 		<property name="securityService" ref="org.sakaiproject.authz.api.SecurityService"/>
 		<property name="userService" ref="org.sakaiproject.user.api.UserDirectoryService"/>
 		<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager"/>
+	</bean>
+
+
+	<!-- StatsUpdateJob _________________________________________________________________________________________ -->
+	<bean id="org.sakaiproject.sitestats.api.StatsAggregateJob"
+		class="org.sakaiproject.sitestats.impl.StatsAggregateJobImpl"
+		init-method="init">
+		<!-- OPTIONS: -->
+			<!-- Maximum number of processed events per job run. -->
+			<property name="maxEventsPerRun" value="50000" />
+			
+			<!-- Starting eventId to be processed.
+				WARNING: This value is only read on the first job run; after that, job status is
+						tracked in SST_JOB_RUN table... If not specified, the job will use the most
+						recent EVENT_ID from SAKAI_EVENT table when Sakai starts up.
+			 -->
+			<!-- 
+			<property name="startEventId" value="-1" />
+			-->
+			
+			<!-- Specify db properties below if SAKAI_EVENT and SAKAI_SESSION tables lives on a different database of Sakai -->
+			<!--
+			<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+	        <property name="url" value="jdbc:mysql://127.0.0.1:3306/GEPUV?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true"/>
+	        <property name="username" value="dbuser"/>
+	        <property name="password" value="dbpassword"/>
+	        -->
+		<!-- /OPTIONS -->
+			
+		<!-- Sakai services -->
+        <property name="statsUpdateManager" ref="org.sakaiproject.sitestats.api.StatsUpdateManager" />
+        <property name="sqlService" ref="org.sakaiproject.db.api.SqlService" />
+	</bean>
+	<bean id="org.sakaiproject.sitestats.api.StatsUpdateJobBeanWrapper"
+		class="org.sakaiproject.component.app.scheduler.jobs.SpringJobBeanWrapper"
+		singleton="true" init-method="init">
+		<property name="jobName" value="SiteStats Event Aggregator" />
+		<property name="beanId" value="org.sakaiproject.sitestats.api.StatsAggregateJob" />
+		<property name="schedulerManager" ref="org.sakaiproject.api.app.scheduler.SchedulerManager" />
 	</bean>
 
 

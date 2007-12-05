@@ -124,6 +124,10 @@
 			<value>#{org_sakaiproject_sitestats_api_StatsManager}</value>
 		</managed-property>
 		<managed-property>
+			<property-name>sstStatsUpdateManager</property-name>
+			<value>#{org_sakaiproject_sitestats_api_StatsUpdateManager}</value>
+		</managed-property>
+		<managed-property>
 			<property-name>sstAuthz</property-name>
 			<value>#{org_sakaiproject_sitestats_api_Authz}</value>
 		</managed-property>
@@ -250,5 +254,9 @@
 	<converter>
 		<converter-id>org.sakaiproject.sitestats.tool.jsf.converter.LOCALIZED_DATE</converter-id>
 		<converter-class>org.sakaiproject.sitestats.tool.jsf.DateConverter</converter-class>
+	</converter>
+	<converter>
+		<converter-id>org.sakaiproject.sitestats.tool.jsf.converter.LOCALIZED_FULLDATE</converter-id>
+		<converter-class>org.sakaiproject.sitestats.tool.jsf.FullDateConverter</converter-class>
 	</converter>
 </faces-config>

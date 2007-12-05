@@ -44,7 +44,9 @@ import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.sitestats.api.Authz;
+import org.sakaiproject.sitestats.api.JobRun;
 import org.sakaiproject.sitestats.api.StatsManager;
+import org.sakaiproject.sitestats.api.StatsUpdateManager;
 import org.sakaiproject.time.api.TimeService;
 import org.sakaiproject.tool.api.Placement;
 import org.sakaiproject.tool.api.SessionManager;
@@ -78,6 +80,7 @@ public class ServiceBean {
 	private transient TimeService			M_time				= null;
 	private transient Authz					SST_authz			= null;
 	private transient StatsManager			SST_sm				= null;
+	private transient StatsUpdateManager	SST_sum				= null;
 
 	private Site							site				= null;
 	private String							siteId				= null;
@@ -92,6 +95,13 @@ public class ServiceBean {
 	}
 	public StatsManager getSstStatsManager() {
 		return SST_sm;
+	}
+	
+	public void setSstStatsUpdateManager(StatsUpdateManager sstStatsUpdateManager) {
+		this.SST_sum = sstStatsUpdateManager;
+	}
+	public StatsUpdateManager getSstStatsUpdateManager() {
+		return SST_sum;
 	}
 	
 	public void setSstAuthz(Authz sstAuthz) {
@@ -291,4 +301,16 @@ public class ServiceBean {
 		return SST_sm.isEnableSiteVisits();
 	}
 	
+	public boolean isLastJobRunDateVisible(){
+		return !SST_sum.isCollectThreadEnabled() && SST_sm.isLastJobRunDateVisible();
+	}
+	
+	public Date getLastJobRunDate(){
+		try{
+			return SST_sum.getEventDateFromLatestJobRun();
+		}catch(Exception e){
+			LOG.error("Error getting latestJobRun",e);
+		}
+		return new Date();
+	}
 }

@@ -106,6 +106,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	private boolean						chartIn3D								= true;
 	private float						chartTransparency						= 0.80f;
 	private boolean						itemLabelsVisible						= false;
+	private boolean						lastJobRunDateVisible					= true;
 
 	/** Controller fields */
 	private List<ToolInfo>				toolEventsDefinition					= null;
@@ -192,6 +193,14 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 
 	public void setShowAnonymousEvents(boolean value){
 		this.showAnonymousEvents = value;
+	}
+	
+	public void setLastJobRunDateVisible(boolean value) {
+		this.lastJobRunDateVisible = value;
+	}
+	
+	public boolean isLastJobRunDateVisible(){
+		return lastJobRunDateVisible;
 	}
 
 	public void setAutoDdl(boolean autoDdl) {
