@@ -35,11 +35,6 @@
 	        </t:aliasBean>
 	    </h:panelGroup>
 	    
-	    
-	      <h:panelGrid>
-                 <h:outputText value="#{msgs.site_info_1}" style="font-weight: bold;"/>            
-                 <h:outputText value="#{msgs.site_info_2}" style="font-weight: bold;"/>
-          </h:panelGrid>
 		
 		<%/* TITLE */%>
 		<t:htmlTag value="h3">
