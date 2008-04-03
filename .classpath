@@ -43,5 +43,6 @@
 	<classpathentry kind="var" path="MAVEN_REPO/commons-beanutils/jars/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/fop/jars/fop-0.93-jdk15.jar"/>
 	<classpathentry kind="var" path="MAVEN_REPO/quartz/jars/quartz-1.5.2.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/scheduler"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
