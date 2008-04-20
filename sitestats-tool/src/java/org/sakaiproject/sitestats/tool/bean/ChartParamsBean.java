@@ -22,6 +22,9 @@ public class ChartParamsBean implements Serializable {
 	public static final String	VIEW_YEAR							= StatsManager.VIEW_YEAR;
 	public static final String	CHATTYPE_BAR						= StatsManager.CHATTYPE_BAR;
 	public static final String	CHATTYPE_PIE						= StatsManager.CHATTYPE_PIE;
+	public static final String	LOGIN_REPORT						= StatsManager.LOGIN_REPORT;
+	public static final String	TOOL_REPORT							= StatsManager.TOOL_REPORT;
+	public static final String	USER_SITE_REPORT					= StatsManager.USER_SITE_REPORT;
 	private static final int	DEFAULT_CHART_WIDTH					= 400;
 	private static final int	DEFAULT_CHART_HEIGHT				= 200;
 	private static final int	MIN_CHART_WIDTH						= 240;
@@ -34,6 +37,7 @@ public class ChartParamsBean implements Serializable {
 	private String				selectedVisitsView					= VIEW_WEEK;
 	private String				selectedActivityView				= VIEW_WEEK;
 	private String				selectedActivityChartType			= CHATTYPE_PIE;
+	private String				selectedReportChartType				= "";
 	private int					mainAreaWidth						= 640;
 	private int					chartWidth							= DEFAULT_CHART_WIDTH;
 	private int					chartHeight							= DEFAULT_CHART_HEIGHT;
@@ -41,6 +45,7 @@ public class ChartParamsBean implements Serializable {
 	/** Rendering control vars */
 	private boolean				renderVisitsChart					= false;
 	private boolean				renderActivityChart					= false;
+	private boolean				renderReportChart					= false;
 	private boolean				maximizedVisitsSelected				= false;
 	private boolean				maximizedActivitySelected			= false;
 	private float				foregroundAlpha						= 0.80f;
@@ -131,6 +136,27 @@ public class ChartParamsBean implements Serializable {
 		this.selectedActivityChartType = CHATTYPE_BAR;
 		this.renderActivityChart = true;
 	}
+	
+	public String getSelectedReportType() {
+		return selectedReportChartType;
+	}
+
+	public void selectLoginReportType (ActionEvent e){
+		this.selectedReportChartType = LOGIN_REPORT;
+		this.renderReportChart = true;
+	}
+
+	public void selectToolReportType (ActionEvent e){
+		this.selectedReportChartType = TOOL_REPORT;
+		this.renderReportChart = true;
+	}
+
+	public void selectUserSiteReportType (ActionEvent e){
+		this.selectedReportChartType = USER_SITE_REPORT;
+		this.renderReportChart = true;
+	}
+
+	
 
 	// ######################################################################################
 	// Chart parameters (ActionEvent) methods
@@ -218,6 +244,15 @@ public class ChartParamsBean implements Serializable {
 		this.renderActivityChart = true;
 	}
 	
+	public boolean isRenderReportChart() {
+		return renderReportChart;
+	}
+	
+	public void renderReportChart(ActionEvent e) {
+		setChartParameters(e);	
+		this.renderReportChart = true;
+	}
+	
 	public void setAllRenderFalse(ActionEvent e) {
 		this.renderVisitsChart = false;
 		this.renderActivityChart = false;		
@@ -237,6 +272,14 @@ public class ChartParamsBean implements Serializable {
 	
 	public void setActivityRenderTrue(ActionEvent e) {
 		this.renderActivityChart = true;	
+	}
+	
+	public void setReportRenderFalse(ActionEvent e) {
+		this.renderReportChart = false;	
+	}
+	
+	public void setReportRenderTrue(ActionEvent e) {
+		this.renderReportChart = true;	
 	}
 	
 	public void selectMaximizedVisits(ActionEvent e) {

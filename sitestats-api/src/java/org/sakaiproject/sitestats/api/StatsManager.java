@@ -38,6 +38,9 @@ public interface StatsManager {
 	public static final String	VIEW_WEEK					= "week";
 	public static final String	VIEW_MONTH					= "month";
 	public static final String	VIEW_YEAR					= "year";
+	public static final String	LOGIN_REPORT				= "login";
+	public static final String	TOOL_REPORT					= "tool";
+	public static final String	USER_SITE_REPORT			= "user-site";
 	public static final String	CHATTYPE_BAR				= "bar";
 	public static final String	CHATTYPE_PIE				= "pie";
 	public static final String	WHO_CUSTOM					= "who-custom";

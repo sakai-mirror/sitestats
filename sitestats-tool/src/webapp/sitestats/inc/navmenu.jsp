@@ -2,6 +2,16 @@
 		<sakai:tool_bar_item
 			action="#{MenuBean.processSiteList}"
 			value="#{msgs.menu_sitelist}"
+			disabled="#{viewName eq 'SiteListBean'}"
+			rendered="#{ServiceBean.adminView}" />
+		<sakai:tool_bar_item
+			value=" | "
+			disabled="true"
+			rendered="#{ServiceBean.adminView}" />
+		<sakai:tool_bar_item
+			action="#{MenuBean.processServerWide}"
+			value="#{msgs.menu_serverwide}"
+			disabled="#{viewName eq 'ServerWideReportBean'}"
 			rendered="#{ServiceBean.adminView}" />
 		<sakai:tool_bar_item
 			value=" | "
