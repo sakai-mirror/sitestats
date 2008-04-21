@@ -80,4 +80,36 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager {
 		
 		return result;
 	}
+
+
+	public List<Logins> getDailyLogin() {
+		String mySql = "select date(SESSION_START) as session_date,"
+		    + " count(*) as user_logins,"
+		    + " count(distinct SESSION_USER) as unique_users"
+		    + " from SAKAI_SESSION"
+		    + " group by 1";		
+		
+		List result = m_sqlService.dbRead(mySql, null, new SqlReader()
+		{
+			public Object readSqlResultRecord (ResultSet result)
+			{
+				Logins info = new LoginsImpl ();
+				try {
+					info.setDate(result.getDate(1));
+					info.setTotalLogins(result.getLong(2));
+					info.setTotalUnique(result.getLong(3));
+				} catch (SQLException e) {
+					return null;
+				}
+				return info;
+			}
+		});
+		
+		return result;
+	}
+
+
+	
+	
+
 }

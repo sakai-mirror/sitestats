@@ -13,6 +13,12 @@ public interface ServerWideReportManager {
 	 */	
 	public List<Logins> getWeeklyLogin ();
 	
+	/**
+	 * Get site login activity statistics grouped by day.
+	 * @return a list of login statistics
+	 */	
+	public List<Logins> getDailyLogin ();
+	
 	
 
 }

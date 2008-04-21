@@ -48,6 +48,7 @@ public class ChartParamsBean implements Serializable {
 	private boolean				renderReportChart					= false;
 	private boolean				maximizedVisitsSelected				= false;
 	private boolean				maximizedActivitySelected			= false;
+	private boolean				maximizedReportSelected			= false;
 	private float				foregroundAlpha						= 0.80f;
 	private String				backgroundColor						= "white";
 
@@ -255,7 +256,8 @@ public class ChartParamsBean implements Serializable {
 	
 	public void setAllRenderFalse(ActionEvent e) {
 		this.renderVisitsChart = false;
-		this.renderActivityChart = false;		
+		this.renderActivityChart = false;
+		this.renderReportChart = false;
 	}
 	
 	public void setVisitsRenderFalse(ActionEvent e) {
@@ -287,6 +289,8 @@ public class ChartParamsBean implements Serializable {
 		this.maximizedActivitySelected = false;	
 		this.renderVisitsChart = false;	
 		this.renderActivityChart = false;	
+		this.maximizedReportSelected = false;	
+		this.renderReportChart = false;	
 	}
 	
 	public boolean isMaximizedVisits(){
@@ -298,11 +302,27 @@ public class ChartParamsBean implements Serializable {
 		this.maximizedActivitySelected = true;	
 		this.renderVisitsChart = false;	
 		this.renderActivityChart = false;	
+		this.maximizedReportSelected = false;	
+		this.renderReportChart = false;	
+	}
+	
+	public void selectMaximizedReport(ActionEvent e) {
+		this.maximizedVisitsSelected = false;	
+		this.maximizedActivitySelected = false;	
+		this.renderVisitsChart = false;	
+		this.renderActivityChart = false;	
+		this.maximizedReportSelected = true;	
+		this.renderReportChart = false;	
+	}
+	
+	public boolean isMaximizedReport(){
+		return this.maximizedReportSelected;
 	}
 	
 	public void restoreSize(ActionEvent e) {
 		this.maximizedVisitsSelected = false;	
 		this.maximizedActivitySelected = false;	
+		this.maximizedReportSelected = false;	
 	}
 	
 	public boolean isMaximizedActivity(){

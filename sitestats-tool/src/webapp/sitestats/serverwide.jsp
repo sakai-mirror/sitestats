@@ -10,15 +10,14 @@
 	<style type="text/css">
 		@import url("/sakai-sitestats-tool/sitestats/css/sitestats.css");
 	</style>
+	
+	<%/* #####  JAVASCRIPT  ##### */%>
+	<sakai:script path="/sitestats/script/common.js"/>
 
 	<%/* #####  FACES MESSAGES  ##### */%>
-	<f:subview id="allowed">
+	<f:subview id="allowed" rendered="#{!ServiceBean.allowed}">
 		<h:message for="allowed" fatalClass="alertMessage" fatalStyle="margin-top: 15px;" showDetail="true"/>
 	</f:subview>
-	
-	<style type="text/css">
-		@import url("sitestats/css/sitestats.css");
-	</style>	
 
 	<a4j:form id="serverWideReportForm" rendered="#{ServerWideReportBean.allowed}">
 	    
@@ -76,7 +75,7 @@
 						<t:outputText id="chosenReportLbl" value="Chosen Report"/>
 	                    <t:htmlTag value="br"/>
 	            		<a4j:outputPanel id="reportChartPanel">
-	            			<t:commandLink action="maximize" title="#{msgs.click_to_max}" actionListener="#{ChartParams.selectMaximizedActivity}">
+	            			<t:commandLink action="maximize" title="#{msgs.click_to_max}" actionListener="#{ChartParams.selectMaximizedReport}">
 		            			<a4j:mediaOutput 
 									id="reportChart"
 									element="img" cacheable="false"
@@ -99,7 +98,7 @@
 		<a4j:jsFunction name="renderReportChart"
 			actionListener="#{ChartParams.renderReportChart}"
 		    reRender="reportSelectors,reportChartPanel" status="reportChartStatus"
-		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 800);">  
+		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 640);">  
 		    <a4j:actionparam name="chartWidth"/>
 		   	<a4j:actionparam name="chartHeight"/>
 		    <a4j:actionparam name="backgroundColor"/>          
@@ -114,6 +113,7 @@
 		</a4j:jsFunction>
 		
 		<%/* #####  Set chart and summary tables render flags to false on startup ##### */%>
+		<a4j:jsFunction name="setChartsRenderFalse" actionListener="#{ChartParams.setAllRenderFalse}" immediate="true"/>
 		<a4j:jsFunction name="setReportChartRenderFalse" actionListener="#{ChartParams.setReportRenderFalse}" immediate="true"/>		    
 		
 		
@@ -123,10 +123,10 @@
 	<f:verbatim>
        	<script type="text/javascript">
        		function getMainAreaWidth(){
-       			return document.getElementById('overviewForm:activityMainArea').offsetWidth - 10;
+       			return document.getElementById('serverWideReportForm:activityMainArea').offsetWidth - 10;
        		}
        		function getChartWidth(){
-       			//return document.getElementById('overviewForm:left').offsetWidth;
+       			//return document.getElementById('serverWideReportForm:left').offsetWidth;
        			return (getMainAreaWidth() / 2);
        		}
        		function getChartHeight(){
@@ -156,6 +156,16 @@
        		}
        	</script>
 	</f:verbatim>		
+	
+	<f:subview id="reportPartialLoader">
+		<f:verbatim>
+        	<script type="text/javascript">
+                 	renderReportChart(getChartWidth(), getChartHeight(), 'white');
+        	</script>
+		</f:verbatim>
+	</f:subview>
+   
+	
 	
 </sakai:view>
 </f:view>

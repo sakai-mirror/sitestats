@@ -20,8 +20,9 @@ import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.time.Week;
@@ -105,7 +106,8 @@ public class ServerWideReportBean
 	if (params.getSelectedReportType ().equals (
 		ChartParamsBean.LOGIN_REPORT))
 	{
-	    XYDataset dataset = getLoginsDataSet (params);
+	    XYDataset dataset = getWeeklyLoginsDataSet (params);
+	    //XYDataset dataset = getDailyLoginsDataSet (params);
 	    if (dataset != null) {
 		generateLineChart (dataset, params, useSmallFontInDomainAxis,
 			out);
@@ -117,7 +119,7 @@ public class ServerWideReportBean
 	}
     }
 
-    private XYDataset getLoginsDataSet (ChartParamsBean params)
+    private XYDataset getWeeklyLoginsDataSet (ChartParamsBean params)
     {
 	// LOG.info("Generating activityWeekBarDataSet");
 	List<Logins> loginList = serverWideReportManager.getWeeklyLogin ();
@@ -137,6 +139,41 @@ public class ServerWideReportBean
 	TimeSeriesCollection dataset = new TimeSeriesCollection ();
 	dataset.addSeries (s1);
 	dataset.addSeries (s2);
+	
+	loginsDataset = dataset;
+
+	return loginsDataset;
+    }
+
+    
+    private XYDataset getDailyLoginsDataSet (ChartParamsBean params)
+    {
+	// LOG.info("Generating activityWeekBarDataSet");
+	List<Logins> loginList = serverWideReportManager.getDailyLogin ();
+	if (loginList == null)
+	    return null;
+
+	TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),
+		Day.class);
+	TimeSeries s2 = new TimeSeries (
+		msgs.getString ("legend_unique_logins"), Day.class);
+	for (Logins login : loginList) {
+	    Day day = new Day (login.getDate ());
+	    s1.add (day, login.getTotalLogins ());
+	    s2.add (day, login.getTotalUnique ());
+	}
+
+	TimeSeriesCollection dataset = new TimeSeriesCollection ();
+	dataset.addSeries (s1);
+	dataset.addSeries (s2);
+	
+        TimeSeries mavS1 = MovingAverage.createMovingAverage(s1, 
+                "7 day login moving average", 7, 0);	
+        dataset.addSeries (mavS1);
+
+        TimeSeries mavS2 = MovingAverage.createMovingAverage(s2, 
+                "7 day unique login moving average", 7, 0);	
+        dataset.addSeries (mavS2);
 
 	loginsDataset = dataset;
 
