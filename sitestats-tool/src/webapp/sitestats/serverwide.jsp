@@ -29,7 +29,6 @@
 				</f:subview>
 	        </t:aliasBean>
         </h:panelGroup>
-
 		
 		<%/* #####  TITLE  ##### */%>
 		<t:htmlTag value="h2">

@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.faces.application.FacesMessage;
@@ -30,10 +31,10 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.RectangleInsets;
 import org.sakaiproject.site.api.SiteService;
 import org.sakaiproject.sitestats.api.Authz;
-import org.sakaiproject.sitestats.api.Logins;
 import org.sakaiproject.sitestats.api.PrefsData;
 import org.sakaiproject.sitestats.api.ServerWideReportManager;
 import org.sakaiproject.sitestats.api.StatsManager;
+import org.sakaiproject.sitestats.api.StatsRecord;
 import org.sakaiproject.tool.cover.ToolManager;
 import org.sakaiproject.util.ResourceLoader;
 
@@ -122,7 +123,7 @@ public class ServerWideReportBean
     private XYDataset getWeeklyLoginsDataSet (ChartParamsBean params)
     {
 	// LOG.info("Generating activityWeekBarDataSet");
-	List<Logins> loginList = serverWideReportManager.getWeeklyLogin ();
+	List<StatsRecord> loginList = serverWideReportManager.getWeeklyLogin ();
 	if (loginList == null)
 	    return null;
 
@@ -130,10 +131,10 @@ public class ServerWideReportBean
 		Week.class);
 	TimeSeries s2 = new TimeSeries (
 		msgs.getString ("legend_unique_logins"), Week.class);
-	for (Logins login : loginList) {
-	    Week week = new Week (login.getDate ());
-	    s1.add (week, login.getTotalLogins ());
-	    s2.add (week, login.getTotalUnique ());
+	for (StatsRecord login : loginList) {
+	    Week week = new Week ((Date) login.get (0));
+	    s1.add (week, (Long) login.get (1));
+	    s2.add (week, (Long) login.get (2));
 	}
 
 	TimeSeriesCollection dataset = new TimeSeriesCollection ();
@@ -149,7 +150,7 @@ public class ServerWideReportBean
     private XYDataset getDailyLoginsDataSet (ChartParamsBean params)
     {
 	// LOG.info("Generating activityWeekBarDataSet");
-	List<Logins> loginList = serverWideReportManager.getDailyLogin ();
+	List<StatsRecord> loginList = serverWideReportManager.getDailyLogin ();
 	if (loginList == null)
 	    return null;
 
@@ -157,10 +158,10 @@ public class ServerWideReportBean
 		Day.class);
 	TimeSeries s2 = new TimeSeries (
 		msgs.getString ("legend_unique_logins"), Day.class);
-	for (Logins login : loginList) {
-	    Day day = new Day (login.getDate ());
-	    s1.add (day, login.getTotalLogins ());
-	    s2.add (day, login.getTotalUnique ());
+	for (StatsRecord login : loginList) {
+	    Day day = new Day ((Date) login.get (0));
+	    s1.add (day, (Long) login.get (1));
+	    s2.add (day, (Long) login.get (2));
 	}
 
 	TimeSeriesCollection dataset = new TimeSeriesCollection ();
@@ -168,11 +169,11 @@ public class ServerWideReportBean
 	dataset.addSeries (s2);
 	
         TimeSeries mavS1 = MovingAverage.createMovingAverage(s1, 
-                "7 day login moving average", 7, 0);	
+                "7 day login moving average", 7, 7);	
         dataset.addSeries (mavS1);
 
         TimeSeries mavS2 = MovingAverage.createMovingAverage(s2, 
-                "7 day unique login moving average", 7, 0);	
+                "7 day unique login moving average", 7, 7);	
         dataset.addSeries (mavS2);
 
 	loginsDataset = dataset;
