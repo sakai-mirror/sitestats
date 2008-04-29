@@ -122,7 +122,7 @@
 	<f:verbatim>
        	<script type="text/javascript">
        		function getMainAreaWidth(){
-       			return document.getElementById('serverWideReportForm:activityMainArea').offsetWidth - 10;
+       			return document.getElementById('serverWideReportForm:reportMainArea').offsetWidth - 10;
        		}
        		function getChartWidth(){
        			//return document.getElementById('serverWideReportForm:left').offsetWidth;
