@@ -30,49 +30,109 @@
 	        </t:aliasBean>
         </h:panelGroup>
 		
-		<%/* #####  TITLE  ##### */%>
-		<t:htmlTag value="h2">
-			<h:outputText value="#{msgs.menu_serverwide}"/>
-			<a4j:status id="reportChartStatus" startText="..." stopText=" " startStyleClass="ajaxLoading"/>	            		
-		</t:htmlTag>
-		<sakai:instruction_message value="#{msgs.instructions_serverwide}" />
-		
 		<%/* #####  PAGE CONTENT  ##### */%>
 		<t:div style="width:100%">
+			<a4j:region id="reportListRegion">
+				<%/* #####  REPORT SELECTORS  ##### */%>
+				<a4j:outputPanel id="reportSelectors">					
+					<a4j:commandLink id="reportWeeklyLoginSel" value="#{msgs.submenu_weekly_login_report}" 
+						actionListener="#{ChartParams.selectWeeklyLoginReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'weeklyLogin'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportWeeklyLoginLbl" value="#{msgs.submenu_weekly_login_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}" styleClass="selector"/>
+					
+					<t:outputText value="    |    "/>
+					
+					<a4j:commandLink id="reportDailyLoginSel" value="#{msgs.submenu_daily_login_report}" 
+						actionListener="#{ChartParams.selectDailyLoginReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'dailyLogin'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportDailyLoginLbl" value="#{msgs.submenu_daily_login_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'dailyLogin'}" styleClass="selector"/>
+					
+					<t:outputText value="    |    "/>
+					
+					<a4j:commandLink id="reportRegularUsersSel" value="#{msgs.submenu_regular_users_report}" 
+						actionListener="#{ChartParams.selectRegularUsersReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'regularUsers'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportRegularUsersLbl" value="#{msgs.submenu_regular_users_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'regularUsers'}" styleClass="selector"/>
+					
+					<t:outputText value="    |    "/>
+					
+					<a4j:commandLink id="reportHourlyUsageSel" value="#{msgs.submenu_hourly_usage_report}" 
+						actionListener="#{ChartParams.selectHourlyUsageReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'hourlyUsage'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportHourlyUsageLbl" value="#{msgs.submenu_hourly_usage_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}" styleClass="selector"/>
+					
+					<t:outputText value="    |    "/>
+					
+					<a4j:commandLink id="reportTopActivitiesSel" value="#{msgs.submenu_top_activities_report}" 
+						actionListener="#{ChartParams.selectTopActivitiesReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'topActivities'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportTopActivitiesLbl" value="#{msgs.submenu_top_activities_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'topActivities'}" styleClass="selector"/>
+				</a4j:outputPanel>						
+
+				<a4j:status id="reportChartStatus" startText="..." stopText=" " startStyleClass="ajaxLoading"/>	            		
+            </a4j:region>
+
+            <t:htmlTag value=""/>
 
 			<%/* #####  REPORTS  ##### */%>
-			<h:panelGrid id="reportMainArea" styleClass="sectionContainerNav" style="width:100%" columns="2" columnClasses="left30,left70">
-				<t:div styleClass="left30">		
-					<a4j:region id="reportListRegion">
-						<%/* #####  REPORT SELECTORS  ##### */%>
-						<a4j:outputPanel id="reportSelectors">					
-							<a4j:commandLink id="reportLoginSel" value="#{msgs.submenu_login_report}" actionListener="#{ChartParams.selectLoginReportType}" rendered="#{ChartParams.selectedReportType ne 'login'}"
-			                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel" styleClass="selector"
-	                			oncomplete="setReportChartRenderFalse()"/>
-							<t:outputText id="reportLoginLbl" value="#{msgs.submenu_login_report}" rendered="#{ChartParams.selectedReportType eq 'login'}" styleClass="selector"/>
-							
-		                    <t:htmlTag value="br"/>
-							
-							<a4j:commandLink id="reportToolSel" value="#{msgs.submenu_tool_report}" actionListener="#{ChartParams.selectToolReportType}" rendered="#{ChartParams.selectedReportType ne 'tool'}"
-			                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel" styleClass="selector"
-	                			oncomplete="setReportChartRenderFalse()"/>
-							<t:outputText id="reportToolLbl" value="#{msgs.submenu_tool_report}" rendered="#{ChartParams.selectedReportType eq 'tool'}" styleClass="selector"/>
-							
-		                    <t:htmlTag value="br"/>
-							
-							<a4j:commandLink id="reportUserSiteSel" value="#{msgs.submenu_user_site_report}" actionListener="#{ChartParams.selectUserSiteReportType}" rendered="#{ChartParams.selectedReportType ne 'user-site'}"
-			                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel" styleClass="selector"
-	                			oncomplete="setReportChartRenderFalse()"/>
-							<t:outputText id="reportUserSiteLbl" value="#{msgs.submenu_user_site_report}" rendered="#{ChartParams.selectedReportType eq 'user-site'}" styleClass="selector"/>
-						</a4j:outputPanel>						
-		            </a4j:region>
-				</t:div>	           
-	            
-				<t:div styleClass="left70">		
+			<h:panelGrid id="reportMainArea" styleClass="sectionContainerNav" style="width:100%" columns="1" 
+				columnClasses="left">
+				<t:div styleClass="left">		
 					<a4j:region id="reportChartRegion">									
-						<%/* #####  ACTIVITY CHART  ##### */%>
-						<t:outputText id="chosenReportLbl" value="Chosen Report"/>
+						<%/* #####  TITLE  ##### */%>
+						<a4j:outputPanel id="reportTitle">					
+							<t:htmlTag value="h2">
+								<t:outputText value="#{msgs.title_weekly_login_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}"/>
+								<t:outputText value="#{msgs.title_daily_login_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'dailyLogin'}"/>
+								<t:outputText value="#{msgs.title_regular_users_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'regularUsers'}"/>
+								<t:outputText value="#{msgs.title_hourly_usage_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}"/>
+								<t:outputText value="#{msgs.title_top_activities_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'topActivities'}"/>
+							</t:htmlTag>
+						</a4j:outputPanel>						
+
+						<a4j:outputPanel id="reportDescription">					
+							<%/* #####  REPORT DESC ##### */%>
+							<t:outputText value="#{msgs.desc_weekly_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}" styleClass="description"/>
+							<t:outputText value="#{msgs.desc_daily_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'dailyLogin'}" styleClass="description"/>
+							<t:outputText value="#{msgs.desc_regular_users_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'regularUsers'}" styleClass="description"/>
+							<t:outputText value="#{msgs.desc_hourly_usage_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}" styleClass="description"/>
+							<t:outputText value="#{msgs.desc_top_activities_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'topActivities'}" styleClass="description"/>
+						</a4j:outputPanel>						
+
 	                    <t:htmlTag value="br"/>
+	                    <t:htmlTag value="br"/>
+	                    
+						<%/* #####  REPORT CHART  ##### */%>
 	            		<a4j:outputPanel id="reportChartPanel">
 	            			<t:commandLink action="maximize" title="#{msgs.click_to_max}" actionListener="#{ChartParams.selectMaximizedReport}">
 		            			<a4j:mediaOutput 
@@ -89,9 +149,6 @@
 		            </a4j:region>	                 
 				</t:div>	           
             </h:panelGrid>	
-
-            <t:htmlTag value="br"/>
-			
 		</t:div>		    
 		
 		<a4j:jsFunction name="renderReportChart"
@@ -126,10 +183,10 @@
        		}
        		function getChartWidth(){
        			//return document.getElementById('serverWideReportForm:left').offsetWidth;
-       			return (getMainAreaWidth() / 2);
+       			return (getMainAreaWidth());
        		}
        		function getChartHeight(){
-       			return 200;
+       			return 300;
        		}
        		function getBodyBackgroundColor(){
        			var bgColor;

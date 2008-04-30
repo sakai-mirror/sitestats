@@ -99,6 +99,13 @@ label.indnt1 {
 	float: right;
 }
 
+.description {
+	color: #333333;
+	font-size: 100%;
+	font-weight: normal;
+	margin: 0pt;
+}
+
 /* Ajax loading */
 .ajaxLoading {
 	background: #ffffff url(../images/ajaxload.gif) no-repeat;

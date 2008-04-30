@@ -51,6 +51,42 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
     {
     }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getMonthlyLogin()
+   */
+  public List<StatsRecord> getMonthlyLogin ()
+  {
+	String mySql = "select date_format(SESSION_START, '%Y-%m') as month, " +
+			"count(*) as user_logins, " +
+			"count(distinct SESSION_USER) as unique_users " +
+			"from SAKAI_SESSION " +
+			"group by 1";
+
+	List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+	    public Object readSqlResultRecord (ResultSet result)
+	    {
+		StatsRecord info = new StatsRecordImpl ();
+		try {
+		    info.add (result.getString (1));
+		    info.add (result.getLong (2));
+		    info.add (result.getLong (3));
+		}
+		catch (SQLException e) {
+		    return null;
+		}
+		return info;
+	    }
+	});
+	
+	// remove the last entry, as it might not be a complete period
+	result.remove (result.size () - 1);
+
+	return result;
+  }
+
+  
     /*
      * (non-Javadoc)
      * 
@@ -78,6 +114,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 	    }
 	});
 
+	// remove the last entry, as it might not be a complete period
+	result.remove (result.size () - 1);
+
 	return result;
     }
 
@@ -103,6 +142,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		return info;
 	    }
 	});
+
+	// remove the last entry, as it might not be a complete period
+	result.remove (result.size () - 1);
 
 	return result;
     }
@@ -176,12 +218,12 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
     public List<StatsRecord> getHourlyUsagePattern ()
     {
-	String mySql = "select date(SESSION_START) as session_date, "
-		+ "hour(session_start) as hour_start, "
+	String mySql = "select date(SESSION_START) as session_date, " 
+	    	+ "hour(session_start) as hour_start, "
 		+ "count(distinct SESSION_USER) as unique_users "
 		+ "from SAKAI_SESSION "
 		+ "where SESSION_START > DATE_SUB(CURDATE(), INTERVAL 30 DAY) "
-		+ "group by 1, 2";
+		+ "group by 1, 2"; 
 
 	List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
 	    public Object readSqlResultRecord (ResultSet result)

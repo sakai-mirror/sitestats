@@ -38,9 +38,11 @@ public interface StatsManager {
 	public static final String	VIEW_WEEK					= "week";
 	public static final String	VIEW_MONTH					= "month";
 	public static final String	VIEW_YEAR					= "year";
-	public static final String	LOGIN_REPORT				= "login";
-	public static final String	TOOL_REPORT					= "tool";
-	public static final String	USER_SITE_REPORT			= "user-site";
+	public static final String WEEKLY_LOGIN_REPORT = "weeklyLogin";
+        public static final String DAILY_LOGIN_REPORT = "dailyLogin";
+        public static final String REGULAR_USERS_REPORT = "regularUsers";
+        public static final String HOURLY_USAGE_REPORT = "hourlyUsage";
+        public static final String TOP_ACTIVITIES_REPORT = "topActivities";
 	public static final String	CHATTYPE_BAR				= "bar";
 	public static final String	CHATTYPE_PIE				= "pie";
 	public static final String	WHO_CUSTOM					= "who-custom";

@@ -22,9 +22,14 @@ public class ChartParamsBean implements Serializable {
 	public static final String	VIEW_YEAR							= StatsManager.VIEW_YEAR;
 	public static final String	CHATTYPE_BAR						= StatsManager.CHATTYPE_BAR;
 	public static final String	CHATTYPE_PIE						= StatsManager.CHATTYPE_PIE;
-	public static final String	LOGIN_REPORT						= StatsManager.LOGIN_REPORT;
-	public static final String	TOOL_REPORT							= StatsManager.TOOL_REPORT;
-	public static final String	USER_SITE_REPORT					= StatsManager.USER_SITE_REPORT;
+
+	// server wide stats
+	public static final String WEEKLY_LOGIN_REPORT = StatsManager.WEEKLY_LOGIN_REPORT;
+        public static final String DAILY_LOGIN_REPORT = StatsManager.DAILY_LOGIN_REPORT;
+        public static final String REGULAR_USERS_REPORT = StatsManager.REGULAR_USERS_REPORT;
+        public static final String HOURLY_USAGE_REPORT = StatsManager.HOURLY_USAGE_REPORT;
+        public static final String TOP_ACTIVITIES_REPORT = StatsManager.TOP_ACTIVITIES_REPORT;
+        
 	private static final int	DEFAULT_CHART_WIDTH					= 400;
 	private static final int	DEFAULT_CHART_HEIGHT				= 200;
 	private static final int	MIN_CHART_WIDTH						= 240;
@@ -142,18 +147,28 @@ public class ChartParamsBean implements Serializable {
 		return selectedReportChartType;
 	}
 
-	public void selectLoginReportType (ActionEvent e){
-		this.selectedReportChartType = LOGIN_REPORT;
+	public void selectWeeklyLoginReportType (ActionEvent e){
+		this.selectedReportChartType = WEEKLY_LOGIN_REPORT;
 		this.renderReportChart = true;
 	}
 
-	public void selectToolReportType (ActionEvent e){
-		this.selectedReportChartType = TOOL_REPORT;
+	public void selectDailyLoginReportType (ActionEvent e){
+		this.selectedReportChartType = DAILY_LOGIN_REPORT;
 		this.renderReportChart = true;
 	}
 
-	public void selectUserSiteReportType (ActionEvent e){
-		this.selectedReportChartType = USER_SITE_REPORT;
+	public void selectRegularUsersReportType (ActionEvent e){
+		this.selectedReportChartType = REGULAR_USERS_REPORT;
+		this.renderReportChart = true;
+	}
+
+	public void selectHourlyUsageReportType (ActionEvent e){
+		this.selectedReportChartType = HOURLY_USAGE_REPORT;
+		this.renderReportChart = true;
+	}
+
+	public void selectTopActivitiesReportType (ActionEvent e){
+		this.selectedReportChartType = TOP_ACTIVITIES_REPORT;
 		this.renderReportChart = true;
 	}
 
