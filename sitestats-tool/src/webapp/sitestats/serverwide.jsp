@@ -35,10 +35,21 @@
 			<a4j:region id="reportListRegion">
 				<%/* #####  REPORT SELECTORS  ##### */%>
 				<a4j:outputPanel id="reportSelectors">					
+					<a4j:commandLink id="reportMonthlyLoginSel" value="#{msgs.submenu_monthly_login_report}" 
+						actionListener="#{ChartParams.selectMonthlyLoginReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'monthlyLogin'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportMonthlyLoginLbl" value="#{msgs.submenu_monthly_login_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'monthlyLogin'}" styleClass="selector"/>
+					
+					<t:outputText value="    |    "/>
+					
 					<a4j:commandLink id="reportWeeklyLoginSel" value="#{msgs.submenu_weekly_login_report}" 
 						actionListener="#{ChartParams.selectWeeklyLoginReportType}" 
 						rendered="#{ChartParams.selectedReportType ne 'weeklyLogin'}"
-	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
 	                	styleClass="selector"
                			oncomplete="setReportChartRenderFalse()"/>
 					<t:outputText id="reportWeeklyLoginLbl" value="#{msgs.submenu_weekly_login_report}" 
@@ -49,7 +60,7 @@
 					<a4j:commandLink id="reportDailyLoginSel" value="#{msgs.submenu_daily_login_report}" 
 						actionListener="#{ChartParams.selectDailyLoginReportType}" 
 						rendered="#{ChartParams.selectedReportType ne 'dailyLogin'}"
-	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
 	                	styleClass="selector"
                			oncomplete="setReportChartRenderFalse()"/>
 					<t:outputText id="reportDailyLoginLbl" value="#{msgs.submenu_daily_login_report}" 
@@ -60,7 +71,7 @@
 					<a4j:commandLink id="reportRegularUsersSel" value="#{msgs.submenu_regular_users_report}" 
 						actionListener="#{ChartParams.selectRegularUsersReportType}" 
 						rendered="#{ChartParams.selectedReportType ne 'regularUsers'}"
-	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
 	                	styleClass="selector"
                			oncomplete="setReportChartRenderFalse()"/>
 					<t:outputText id="reportRegularUsersLbl" value="#{msgs.submenu_regular_users_report}" 
@@ -71,7 +82,7 @@
 					<a4j:commandLink id="reportHourlyUsageSel" value="#{msgs.submenu_hourly_usage_report}" 
 						actionListener="#{ChartParams.selectHourlyUsageReportType}" 
 						rendered="#{ChartParams.selectedReportType ne 'hourlyUsage'}"
-	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
 	                	styleClass="selector"
                			oncomplete="setReportChartRenderFalse()"/>
 					<t:outputText id="reportHourlyUsageLbl" value="#{msgs.submenu_hourly_usage_report}" 
@@ -82,11 +93,22 @@
 					<a4j:commandLink id="reportTopActivitiesSel" value="#{msgs.submenu_top_activities_report}" 
 						actionListener="#{ChartParams.selectTopActivitiesReportType}" 
 						rendered="#{ChartParams.selectedReportType ne 'topActivities'}"
-	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription" 
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
 	                	styleClass="selector"
                			oncomplete="setReportChartRenderFalse()"/>
 					<t:outputText id="reportTopActivitiesLbl" value="#{msgs.submenu_top_activities_report}" 
 						rendered="#{ChartParams.selectedReportType eq 'topActivities'}" styleClass="selector"/>
+
+					<t:outputText value="    |    "/>
+					
+					<a4j:commandLink id="reportToolSel" value="#{msgs.submenu_tool_report}" 
+						actionListener="#{ChartParams.selectToolReportType}" 
+						rendered="#{ChartParams.selectedReportType ne 'toolReport'}"
+	                	status="reportChartStatus" reRender="reportSelectors,reportChartPanel,reportTitle,reportDescription,reportNotes" 
+	                	styleClass="selector"
+               			oncomplete="setReportChartRenderFalse()"/>
+					<t:outputText id="reportToolLbl" value="#{msgs.submenu_tool_report}" 
+						rendered="#{ChartParams.selectedReportType eq 'toolReport'}" styleClass="selector"/>
 				</a4j:outputPanel>						
 
 				<a4j:status id="reportChartStatus" startText="..." stopText=" " startStyleClass="ajaxLoading"/>	            		
@@ -102,6 +124,8 @@
 						<%/* #####  TITLE  ##### */%>
 						<a4j:outputPanel id="reportTitle">					
 							<t:htmlTag value="h2">
+								<t:outputText value="#{msgs.title_monthly_login_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'monthlyLogin'}"/>
 								<t:outputText value="#{msgs.title_weekly_login_report}" 
 									rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}"/>
 								<t:outputText value="#{msgs.title_daily_login_report}" 
@@ -112,11 +136,15 @@
 									rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}"/>
 								<t:outputText value="#{msgs.title_top_activities_report}" 
 									rendered="#{ChartParams.selectedReportType eq 'topActivities'}"/>
+								<t:outputText value="#{msgs.title_tool_report}" 
+									rendered="#{ChartParams.selectedReportType eq 'toolReport'}"/>
 							</t:htmlTag>
 						</a4j:outputPanel>						
 
 						<a4j:outputPanel id="reportDescription">					
 							<%/* #####  REPORT DESC ##### */%>
+							<t:outputText value="#{msgs.desc_monthly_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'monthlyLogin'}" styleClass="description"/>
 							<t:outputText value="#{msgs.desc_weekly_login_report}" 
 								rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}" styleClass="description"/>
 							<t:outputText value="#{msgs.desc_daily_login_report}" 
@@ -127,6 +155,8 @@
 								rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}" styleClass="description"/>
 							<t:outputText value="#{msgs.desc_top_activities_report}" 
 								rendered="#{ChartParams.selectedReportType eq 'topActivities'}" styleClass="description"/>
+							<t:outputText value="#{msgs.desc_tool_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'toolReport'}" styleClass="description"/>
 						</a4j:outputPanel>						
 
 	                    <t:htmlTag value="br"/>
@@ -144,8 +174,28 @@
 			                        rendered="#{ChartParams.renderReportChart}"
 								/>
 							</t:commandLink>
-		                    <t:htmlTag value="br"/>
 	                    </a4j:outputPanel>
+	                    
+	                    <t:htmlTag value="br"/>
+	                    <t:htmlTag value="br"/>	                    
+
+						<a4j:outputPanel id="reportNotes">					
+							<%/* #####  REPORT NOTES ##### */%>
+							<t:outputText value="#{msgs.notes_monthly_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'monthlyLogin'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_weekly_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'weeklyLogin'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_daily_login_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'dailyLogin'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_regular_users_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'regularUsers'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_hourly_usage_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'hourlyUsage'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_top_activities_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'topActivities'}" styleClass="notes"/>
+							<t:outputText value="#{msgs.notes_tool_report}" 
+								rendered="#{ChartParams.selectedReportType eq 'toolReport'}" styleClass="notes"/>
+						</a4j:outputPanel>						
 		            </a4j:region>	                 
 				</t:div>	           
             </h:panelGrid>	
@@ -154,7 +204,7 @@
 		<a4j:jsFunction name="renderReportChart"
 			actionListener="#{ChartParams.renderReportChart}"
 		    reRender="reportSelectors,reportChartPanel" status="reportChartStatus"
-		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 640);">  
+		    immediate="true" oncomplete="setMainFrameHeightNoScroll(window.name, 700);">  
 		    <a4j:actionparam name="chartWidth"/>
 		   	<a4j:actionparam name="chartHeight"/>
 		    <a4j:actionparam name="backgroundColor"/>          
@@ -186,7 +236,7 @@
        			return (getMainAreaWidth());
        		}
        		function getChartHeight(){
-       			return 300;
+       			return 420;
        		}
        		function getBodyBackgroundColor(){
        			var bgColor;

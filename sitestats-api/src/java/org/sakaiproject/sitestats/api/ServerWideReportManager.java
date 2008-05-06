@@ -35,6 +35,23 @@ public interface ServerWideReportManager
     public List<StatsRecord> getDailyLogin ();
 
     /**
+     * Get site site created or deleted per time period.
+     * 
+     * @param period	string: daily, weekly, monthly
+     * @return a list of login statistics. format: Date, number of site created, 
+     *         number of site deleted
+     */
+    public List<StatsRecord> getSiteCreatedDeletedStats (String period);
+
+    /**
+     * Get number of new user login.
+     * 
+     * @param period	string: daily, weekly, monthly
+     * @return a list of login statistics. format: Date, number of new user. 
+     */
+    public List<StatsRecord> getNewUserStats (String period);
+
+    /**
      * Get top 20 activities in the last 7/30/365 daily average.
      * 
      * @return a list of activities. format: event, last 7, last 30, last 365
@@ -56,4 +73,11 @@ public interface ServerWideReportManager
      */
     public List<StatsRecord> getHourlyUsagePattern ();
 
+    
+    /**
+     * Get tool count
+     * 
+     * @return format: tool id, tool count
+     */
+    public List<StatsRecord> getToolCount ();    
 }

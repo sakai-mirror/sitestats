@@ -106,6 +106,13 @@ label.indnt1 {
 	margin: 0pt;
 }
 
+.notes {
+	color: #333333;
+	font-size: 90%;
+	font-weight: normal;
+	margin: 0pt;
+}
+
 /* Ajax loading */
 .ajaxLoading {
 	background: #ffffff url(../images/ajaxload.gif) no-repeat;

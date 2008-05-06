@@ -24,11 +24,13 @@ public class ChartParamsBean implements Serializable {
 	public static final String	CHATTYPE_PIE						= StatsManager.CHATTYPE_PIE;
 
 	// server wide stats
+	public static final String MONTHLY_LOGIN_REPORT = StatsManager.MONTHLY_LOGIN_REPORT;
 	public static final String WEEKLY_LOGIN_REPORT = StatsManager.WEEKLY_LOGIN_REPORT;
-        public static final String DAILY_LOGIN_REPORT = StatsManager.DAILY_LOGIN_REPORT;
-        public static final String REGULAR_USERS_REPORT = StatsManager.REGULAR_USERS_REPORT;
-        public static final String HOURLY_USAGE_REPORT = StatsManager.HOURLY_USAGE_REPORT;
-        public static final String TOP_ACTIVITIES_REPORT = StatsManager.TOP_ACTIVITIES_REPORT;
+    public static final String DAILY_LOGIN_REPORT = StatsManager.DAILY_LOGIN_REPORT;
+	public static final String REGULAR_USERS_REPORT = StatsManager.REGULAR_USERS_REPORT;
+	public static final String HOURLY_USAGE_REPORT = StatsManager.HOURLY_USAGE_REPORT;
+	public static final String TOP_ACTIVITIES_REPORT = StatsManager.TOP_ACTIVITIES_REPORT;
+	public static final String TOOL_REPORT = StatsManager.TOOL_REPORT;
         
 	private static final int	DEFAULT_CHART_WIDTH					= 400;
 	private static final int	DEFAULT_CHART_HEIGHT				= 200;
@@ -147,6 +149,11 @@ public class ChartParamsBean implements Serializable {
 		return selectedReportChartType;
 	}
 
+	public void selectMonthlyLoginReportType (ActionEvent e){
+		this.selectedReportChartType = MONTHLY_LOGIN_REPORT;
+		this.renderReportChart = true;
+	}
+
 	public void selectWeeklyLoginReportType (ActionEvent e){
 		this.selectedReportChartType = WEEKLY_LOGIN_REPORT;
 		this.renderReportChart = true;
@@ -169,6 +176,11 @@ public class ChartParamsBean implements Serializable {
 
 	public void selectTopActivitiesReportType (ActionEvent e){
 		this.selectedReportChartType = TOP_ACTIVITIES_REPORT;
+		this.renderReportChart = true;
+	}
+
+	public void selectToolReportType (ActionEvent e){
+		this.selectedReportChartType = TOOL_REPORT;
 		this.renderReportChart = true;
 	}
 
