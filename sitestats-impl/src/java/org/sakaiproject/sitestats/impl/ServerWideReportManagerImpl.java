@@ -124,7 +124,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				+ " count(*) as user_logins,"
 				+ " count(distinct SESSION_USER) as unique_users"
 				+ " from SAKAI_SESSION" 
-				+ " where SESSION_START > DATE_SUB(CURDATE(), INTERVAL 365 DAY)"
+				+ " where SESSION_START > DATE_SUB(CURDATE(), INTERVAL 90 DAY)"
 				+ " group by 1";
 
 		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
@@ -163,8 +163,13 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		String mySql = "select " + sqlPeriod + ", "
 				+ "sum(if(event = 'site.add' && ref not regexp '/site/[~!]',1,0)) as site_created, "
 				+ "sum(if(event = 'site.del' && ref not regexp '/site/[~!]',1,0)) as site_deleted "
-				+ "FROM SAKAI_EVENT "
-				+ "group by 1";
+				+ "FROM SAKAI_EVENT ";
+		
+		if (period.equals ("daily")) {
+			mySql = mySql + "where EVENT_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
+		}
+		
+		mySql = mySql + "group by 1";
 
 		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
@@ -203,7 +208,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				+ "FROM SAKAI_EVENT ";
 
 		if (period.equals ("daily")) {
-			mySql = mySql + "where EVENT_DATE > DATE_SUB(CURDATE(), INTERVAL 365 DAY) ";
+			mySql = mySql + "where EVENT_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
 		}
 		mySql = mySql + "group by 1";
 
@@ -291,6 +296,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				return info;
 			}
 		});
+
+		// remove the last entry, as it might not be a complete period
+		result.remove (result.size () - 1);
 
 		return result;
 	}
