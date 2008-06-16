@@ -10,19 +10,16 @@
 	<classpathentry excluding="**/.DS_Store" kind="src" path="sitestats-tool/src/webapp"/>
 	<classpathentry kind="src" path="sitestats-api/src/config"/>
 	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-logging/jars/commons-logging-1.0.4.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-lang/jars/commons-lang-2.1.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/org.hibernate/jars/hibernate-3.1.3.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/org.springframework/jars/spring-1.2.8.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/org.springframework/jars/spring-mock-1.2.6.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/myfaces/jars/tomahawk-1.1.6.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/jsf/jars/jsf-api-1.1.01.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/jsf/jars/jsf-impl-1.1.01.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/poi/jars/poi-2.0-final-20040126.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/servletapi/jars/servletapi-2.4.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/myfaces/jars/myfaces-api-1.1.5.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/myfaces/jars/myfaces-impl-1.1.5.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/jspapi/jars/jsp-api-2.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.1/commons-lang-2.1.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/hibernate/hibernate/3.2.1.ga/hibernate-3.2.1.ga.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring/2.0.6/spring-2.0.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jsf/jsf-api/1.1.01/jsf-api-1.1.01.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jsf/jsf-impl/1.1.01/jsf-impl-1.1.01.jar"/>
+	<classpathentry kind="var" path="M2_REPO/poi/poi/2.0-final-20040126/poi-2.0-final-20040126.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/myfaces/core/myfaces-api/1.1.5/myfaces-api-1.1.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/servlet/jsp-api/2.0/jsp-api-2.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/jsf"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/component-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/site-api"/>
@@ -36,13 +33,15 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/event-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/content-api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/db-impl"/>
-	<classpathentry kind="var" path="MAVEN_REPO/jfree/jars/jcommon-1.0.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/jfree/jars/jfreechart-1.0.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/org.ajax4jsf/jars/ajax4jsf-1.1.1.jar" sourcepath="/DEVLIBS/ajax4jsf-1.1.1-src/framework/src/main/java"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-digester/jars/commons-digester-1.6.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/commons-beanutils/jars/commons-beanutils-1.7.0.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/fop/jars/fop-0.93-jdk15.jar"/>
-	<classpathentry kind="var" path="MAVEN_REPO/quartz/jars/quartz-1.5.2.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/scheduler"/>
+	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.9/jcommon-1.0.9.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jfree/jfreechart/1.0.5/jfreechart-1.0.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/ajax4jsf/ajax4jsf/1.1.1/ajax4jsf-1.1.1.jar" sourcepath="/DEVLIBS/ajax4jsf-1.1.1-src/framework/src/main/java"/>
+	<classpathentry kind="var" path="M2_REPO/commons-digester/commons-digester/1.6/commons-digester-1.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/xmlgraphics/fop/0.93/fop-0.93.jar"/>
+	<classpathentry kind="var" path="M2_REPO/quartz/quartz/1.5.2/quartz-1.5.2.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jobscheduler"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/myfaces/core/myfaces-impl/1.1.5/myfaces-impl-1.1.5.jar" sourcepath="/THIRD_PARTY_SRC/myfaces-1.1.5-src/src"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/myfaces/tomahawk/tomahawk/1.1.6/tomahawk-1.1.6.jar" sourcepath="/THIRD_PARTY_SRC/myfaces-1.1.5-src/src/"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
