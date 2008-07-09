@@ -99,6 +99,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 
 	/** Spring bean members */
 	private boolean						enableSiteVisits						= org.sakaiproject.component.cover.ServerConfigurationService.getBoolean("display.users.present", false);
+	private boolean						enableServerWideStats				= false;
 	private String						customToolEventsDefinitionFile			= null;
 	private String						customToolEventsAddDefinitionFile		= null;
 	private String						customToolEventsRemoveDefinitionFile	= null;
@@ -157,6 +158,14 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	
 	public boolean isEnableSiteVisits() {
 		return enableSiteVisits;
+	}
+
+	public void setServerWideStatsEnabled(boolean enableServerWideStats) {
+		this.enableServerWideStats = enableServerWideStats;
+	}
+
+	public boolean isServerWideStatsEnabled() {
+		return enableServerWideStats;
 	}
 	
 	public void setChartBackgroundColor(String color) {

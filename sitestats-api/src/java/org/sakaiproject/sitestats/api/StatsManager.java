@@ -87,6 +87,8 @@ public interface StatsManager {
 	public boolean isItemLabelsVisible();
 	
 	public boolean isLastJobRunDateVisible();
+
+	public boolean isServerWideStatsEnabled();
 	
 	// ################################################################
 	// Registered/configured events 

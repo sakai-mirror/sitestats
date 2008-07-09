@@ -23,7 +23,7 @@
 	<h:form id="sitelistForm" rendered="#{SiteListBean.allowed}">
 	    
 		<%/* #####  MENU  ##### */%>
-		<h:panelGroup>
+		<h:panelGroup rendered="#{ServiceBean.serverWideStatsEnabled}">
 	        <t:aliasBean alias="#{viewName}" value="SiteListBean">
 	            <f:subview id="menu">
 					<%@include file="inc/navmenu.jsp"%>
