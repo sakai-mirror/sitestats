@@ -5,11 +5,9 @@
 	<classpathentry kind="src" output="sitestats-impl-hib/m2-target/classes" path="sitestats-impl-hib/src/java"/>
 	<classpathentry excluding="**" kind="src" output="sitestats-impl-hib/m2-target/classes" path="sitestats-impl-hib/src/resources"/>
 	<classpathentry kind="src" output="sitestats-impl/m2-target/classes" path="sitestats-impl/src/java"/>
-	<classpathentry excluding="**" kind="src" output="sitestats-impl/m2-target/classes" path="sitestats-impl/src/bundle"/>
+	<classpathentry excluding="**" kind="src" output="sitestats-impl/m2-target/classes" path="sitestats-bundles"/>
 	<classpathentry kind="src" output="sitestats-tool/m2-target/classes" path="sitestats-tool/src/java"/>
-	<classpathentry excluding="**" kind="src" output="sitestats-tool/m2-target/classes" path="sitestats-tool/src/bundle"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre1.5.0_11"/>
 	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
-	<classpathentry kind="var" path="M2_REPO/org/sakaiproject/sakai-db-ext/SNAPSHOT/sakai-db-ext-SNAPSHOT.jar" sourcepath="/SAKAI_SRC/db/db-impl/ext/src/java"/>
 	<classpathentry kind="output" path="m2-target/classes"/>
 </classpath>
