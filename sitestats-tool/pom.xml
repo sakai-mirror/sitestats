@@ -118,10 +118,6 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <dependency>
-      <groupId>jfree</groupId>
-      <artifactId>jfreechart</artifactId>
-    </dependency>
 
     <!-- Apache Commons -->
     <dependency>
