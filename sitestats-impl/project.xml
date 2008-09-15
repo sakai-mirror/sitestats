@@ -224,12 +224,11 @@
 
 		<resources>
 			<resource>
-				<directory>${basedir}/src/bundle</directory>
+				<directory>${basedir}/../sitestats-bundles</directory>
 				<includes>
 					<include>**/*.properties</include>
 				</includes>
 			</resource>
-
 			<resource>
 				<directory>src/java</directory>
 				<includes>

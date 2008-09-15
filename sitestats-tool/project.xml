@@ -328,7 +328,7 @@
 				</includes>
 			</resource>
 			<resource>
-				<directory>${basedir}/src/bundle</directory>
+				<directory>${basedir}/../sitestats-bundles</directory>
 				<includes>
 					<include>**/*.properties</include>
 				</includes>
