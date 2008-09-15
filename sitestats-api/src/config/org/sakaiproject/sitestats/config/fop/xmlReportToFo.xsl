@@ -165,10 +165,10 @@
 				<xsl:when test="what = 'what-resources'">
 					<fo:table-cell>
 						<fo:block>
-							<fo:external-graphic>
+							<!--<fo:external-graphic>
 								<xsl:attribute name="src">url('<xsl:value-of select="resourceimg"/>')</xsl:attribute>
 								<xsl:attribute name="content-height">8pt</xsl:attribute>
-							</fo:external-graphic>
+							</fo:external-graphic>-->
 							<xsl:value-of select="resource" />
 						</fo:block>
 					</fo:table-cell>

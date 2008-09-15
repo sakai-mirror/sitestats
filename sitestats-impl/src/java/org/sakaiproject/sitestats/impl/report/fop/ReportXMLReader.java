@@ -191,7 +191,7 @@ public class ReportXMLReader extends AbstractObjectReader {
 	            	String resAction = cs.getRefAction();
 	            	handler.element("resource", resName == null? "" : resName);
 		            handler.element("action", resAction == null? "" : msgs.getString("action_"+resAction) );
-		            handler.element("resourceimg", "library://" + M_sm.getResourceImageLibraryRelativePath(cs.getRef()));	            	
+		            //handler.element("resourceimg", "library://" + M_sm.getResourceImageLibraryRelativePath(cs.getRef()));	            	
 	            }else{
 	            	String eventRef = cs.getRef();
 	            	handler.element("event", M_ers.getEventName(eventRef == null? "" : eventRef));
