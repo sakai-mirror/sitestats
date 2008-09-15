@@ -74,7 +74,7 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 
 	public void init() {		
 		// configure cache
-		eventRegistryCache = M_ms.newCache(CACHENAME);
+		eventRegistryCache = M_ms.newCache();
 		
 		LOG.info("init()");
 	}

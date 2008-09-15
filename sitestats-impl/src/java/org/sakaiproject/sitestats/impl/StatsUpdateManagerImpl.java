@@ -814,7 +814,7 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 		if(M_sm.isEventContextSupported()) {
 			String contextId = null;
 			try{
-				contextId = (String) e.getClass().getMethod("getContext", null).invoke(e, null);
+				contextId = (String) e.getClass().getMethod("getContext", (Class[]) null).invoke(e, (Object[]) null);
 				LOG.debug("Context read from Event.getContext() for event: " + eventId + " - context: " + contextId);
 			}catch(Exception ex){
 				LOG.warn("Unable to get Event.getContext() for event: " + eventId, ex);

@@ -1980,7 +1980,7 @@ public class StatsManagerImpl extends HibernateDaoSupport implements StatsManage
 	
 	private void checkForEventContextSupport() {
 		try{
-			Event.class.getMethod("getContext", null);
+			Event.class.getMethod("getContext", (Class[]) null);
 			isEventContextSupported = true;
 			logger.info("init(): - Event.getContext() method IS supported.");
 		}catch(SecurityException e){

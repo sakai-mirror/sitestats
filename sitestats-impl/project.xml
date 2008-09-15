@@ -65,6 +65,11 @@
 		</dependency>
 		<dependency>
 			<groupId>sakaiproject</groupId>
+			<artifactId>sakai-memory-api</artifactId>
+			<version>${sakai.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>sakaiproject</groupId>
 			<artifactId>sakai-site-api</artifactId>
 			<version>${sakai.version}</version>
 		</dependency>
@@ -164,6 +169,52 @@
                         <groupId>sakaiproject</groupId>
                         <artifactId>sakai-comp-shared-scheduler</artifactId>
                         <version>${sakai.version}</version>
+                </dependency>
+
+		<dependency>
+	            <groupId>fop</groupId>
+	            <artifactId>fop</artifactId>
+        	    <version>0.93-jdk15</version>
+        	</dependency>
+		<dependency>
+        	    <groupId>avalon-framework</groupId>
+	            <artifactId>avalon-framework-api</artifactId>
+	            <version>4.2.0</version>
+	        </dependency>
+	        <dependency>
+        	    <groupId>avalon-framework</groupId>
+	            <artifactId>avalon-framework-impl</artifactId>
+        	    <version>4.2.0</version>
+	        </dependency>
+	        <dependency>
+        	    <groupId>org.apache.xmlgraphics</groupId>
+	            <artifactId>xmlgraphics-commons</artifactId>
+        	    <version>1.1</version>
+	        </dependency>
+	        <dependency>
+        	    <groupId>batik</groupId>
+	            <artifactId>batik-util</artifactId>
+        	    <version>1.6</version>
+	        </dependency>
+
+		<!-- JSF chart dependencies -->
+                <dependency>
+                        <groupId>jfree</groupId>
+                        <artifactId>jfreechart</artifactId>
+                        <version>1.0.4</version>
+                </dependency>
+                <dependency>
+                        <groupId>jfree</groupId>
+                        <artifactId>jcommon</artifactId>
+                        <version>1.0.8</version>
+                </dependency>
+
+
+                <!-- Excel export -->
+                <dependency>
+                        <groupId>poi</groupId>
+                        <artifactId>poi</artifactId>
+                        <version>2.0-final-20040126</version>
                 </dependency>
 	</dependencies>
 
