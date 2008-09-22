@@ -1,0 +1,32 @@
+<html xmlns:wicket>
+<wicket:panel>
+  
+    <!-- Last Job run -->
+    <div wicket:id="lastJobRun" class="additionalInfo">
+        <img src="/sitestats/images/silk/icons/information.png" style="vertical-align:middle" title="Information about last update"/>
+        &nbsp;
+        <wicket:message key="last_job_run_date" style="vertical-align:middle">[last_job_run_date]</wicket:message>
+        <span wicket:id="lastJobRunDate" style="vertical-align:middle">[date]</span>
+    </div>
+    
+     <div id="overview" style="width: 100%">
+        <!-- Visits -->
+        <span wicket:id="visits">
+	        <h4 class="summaryHeader">
+	            <wicket:message key="overview_title_visits">[overview_title_visits]</wicket:message>
+	        </h4>
+	        <span wicket:id="visitsPanel"></span>
+        </span>
+        
+        <!-- Activity -->
+        <span wicket:id="activity">
+            <h4 class="summaryHeader">
+                <wicket:message key="overview_title_activity">[overview_title_activity]</wicket:message>
+            </h4>
+            <span wicket:id="activityPanel"></span>
+        </span>
+    </div>
+  
+</wicket:panel>
+</html>
+  

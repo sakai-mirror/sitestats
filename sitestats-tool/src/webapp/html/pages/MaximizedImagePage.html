@@ -10,12 +10,14 @@
     </head>
 	<body>
 		<wicket:extend>
-            <menu wicket:id="menu" class="navIntraTool">[menu]</menu>
-		
-            <h2><wicket:message key="menu_overview">[menu_overview]</wicket:message></h2>
-		    
-		    <span wicket:id="overview">[overview]</span>
-		    
+		    <div style="width: 100%; text-align: center;">
+		      <img wicket:id="image"></img>
+		    </div>
+		    <form wicket:id="form">
+			    <p class="act">
+	                <input type="submit" wicket:id="back" wicket:message="value:overview_back" class="active"/>
+			    </p>
+			</form>
 		</wicket:extend>
 	</body>
 </html>

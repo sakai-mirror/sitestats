@@ -54,6 +54,25 @@
         <servlet-name>sakai.sitestats</servlet-name>
         <url-pattern>/sakai-sitestats-tool/*</url-pattern>      
     </servlet-mapping>
+                
+                
+    <!-- Tool: sakai.sitestats -->
+    <servlet>
+        <servlet-name>sakai.sitestats.admin</servlet-name>
+        <servlet-class>org.apache.wicket.protocol.http.WicketServlet</servlet-class>        
+        <init-param>
+            <param-name>applicationFactoryClassName</param-name>
+            <param-value>org.apache.wicket.spring.SpringWebApplicationFactory</param-value>
+        </init-param>
+        <init-param>
+            <param-name>applicationBean</param-name>
+            <param-value>siteStatsAdminApplication</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>sakai.sitestats.admin</servlet-name>
+        <url-pattern>/sakai-sitestats-tool/*</url-pattern>      
+    </servlet-mapping>
 
 
     <!--  The ToolListener causes this tool to be registered with Sakai.  -->

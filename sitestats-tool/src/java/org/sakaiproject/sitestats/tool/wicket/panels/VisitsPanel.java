@@ -1,0 +1,255 @@
+package org.sakaiproject.sitestats.tool.wicket.panels;
+
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxLink;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.sakaiproject.sitestats.api.PrefsData;
+import org.sakaiproject.sitestats.api.StatsManager;
+import org.sakaiproject.sitestats.api.SummaryVisitsTotals;
+import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
+import org.sakaiproject.sitestats.tool.wicket.components.AjaxLazyLoadImage;
+import org.sakaiproject.sitestats.tool.wicket.pages.OverviewPage;
+
+
+/**
+ * @author Nuno Fernandes
+ */
+public class VisitsPanel extends Panel {
+	private static final long		serialVersionUID	= 1L;
+	private static Log				LOG					= LogFactory.getLog(VisitsPanel.class);
+
+	/** Inject Sakai facade */
+	@SpringBean
+	private transient SakaiFacade	facade;
+
+	/** The site id. */
+	private String					siteId				= null;
+
+	/** Selected chart view. */
+	private String					selectedView		= StatsManager.VIEW_WEEK;
+	private int						selectedWidth		= 0;
+	private int						selectedHeight		= 0;
+	private int						maximizedWidth			= 0;
+	private int						maximizedHeight			= 0;
+
+	// UI Componets
+	private WebMarkupContainer		selectors			= null;
+	private IndicatingAjaxLink		lastWeekLink		= null;
+	private WebMarkupContainer		lastWeekLabel		= null;
+	private IndicatingAjaxLink		lastMonthLink		= null;
+	private WebMarkupContainer		lastMonthLabel		= null;
+	private IndicatingAjaxLink		lastYearLink		= null;
+	private WebMarkupContainer		lastYearLabel		= null;
+
+	private WebMarkupContainer		visitsTable			= null;
+	private Fragment 				visitsTableFrag		= null;
+	private WebMarkupContainer		visitsTableContainer = null;
+
+	private AjaxLazyLoadImage		chart				= null;
+
+	/**
+	 * Default constructor.
+	 * @param id The wicket:id
+	 * @param siteId The related site id
+	 */
+	public VisitsPanel(String id, String siteId) {
+		super(id);
+		this.siteId = siteId;
+		setRenderBodyOnly(true);
+		setOutputMarkupId(true);
+		renderChart();
+		renderSelectors();
+		renderTable();		
+	}
+
+	/** Render chart selectors. */
+	private void renderSelectors() {
+		selectors = new WebMarkupContainer("selectors");
+		selectors.setOutputMarkupId(true);
+		add(selectors);
+		// Last week
+		boolean inLastWeek = StatsManager.VIEW_WEEK.equals(getSelectedView());
+		lastWeekLink = new IndicatingAjaxLink("lastWeekLink") {
+			@Override
+			public void onClick(AjaxRequestTarget target) {
+				setSelectedView(StatsManager.VIEW_WEEK);
+				target.addComponent(selectors);
+				target.addComponent(chart);
+			}			
+		};
+		lastWeekLink.setVisible(!inLastWeek);
+		selectors.add(lastWeekLink);
+		lastWeekLabel = new WebMarkupContainer("lastWeekLabel");
+		lastWeekLabel.setVisible(inLastWeek);
+		selectors.add(lastWeekLabel);
+
+		// Last month
+		boolean inLastMonth = StatsManager.VIEW_MONTH.equals(getSelectedView());
+		lastMonthLink = new IndicatingAjaxLink("lastMonthLink") {
+			@Override
+			public void onClick(AjaxRequestTarget target) {
+				setSelectedView(StatsManager.VIEW_MONTH);
+				target.addComponent(selectors);
+				target.addComponent(chart);
+			}
+		};
+		lastMonthLink.setVisible(!inLastMonth);
+		selectors.add(lastMonthLink);
+		lastMonthLabel = new WebMarkupContainer("lastMonthLabel");
+		lastMonthLabel.setVisible(inLastMonth);
+		selectors.add(lastMonthLabel);
+
+		// Last year
+		boolean inLastYear = StatsManager.VIEW_YEAR.equals(getSelectedView());
+		lastYearLink = new IndicatingAjaxLink("lastYearLink") {
+			@Override
+			public void onClick(AjaxRequestTarget target) {
+				setSelectedView(StatsManager.VIEW_YEAR);
+				target.addComponent(selectors);
+				target.addComponent(chart);
+			}
+
+		};
+		lastYearLink.setVisible(!inLastYear);
+		selectors.add(lastYearLink);
+		lastYearLabel = new WebMarkupContainer("lastYearLabel");
+		lastYearLabel.setVisible(inLastYear);
+		selectors.add(lastYearLabel);
+	}
+
+	/** Render table. */
+	private void renderTable() {
+		visitsTableContainer = new WebMarkupContainer("visitsTableContainer");
+		visitsTableContainer.setOutputMarkupId(true);
+		add(visitsTableContainer);
+		
+		WebMarkupContainer visitsTablePre = new WebMarkupContainer("visitsTablePre");
+		visitsTablePre.setOutputMarkupId(true);
+		visitsTableContainer.add(visitsTablePre);
+	}
+	
+	/** Render data. */
+	@SuppressWarnings("deprecation")
+	public Component renderTableData() {
+		SummaryVisitsTotals summaryVisitsTotals = facade.getStatsManager().getSummaryVisitsTotals(siteId);
+
+		visitsTableContainer.removeAll();
+		visitsTableFrag = new Fragment("visitsTablePre", "visitsTableFrag");
+		visitsTableFrag.setOutputMarkupId(true);
+		visitsTableContainer.add(visitsTableFrag);
+		visitsTable = new WebMarkupContainer("visitsTable");
+		visitsTableFrag.add(visitsTable);
+		
+		// Total visits
+		final Label totalVisits = new Label("totalVisits", String.valueOf(summaryVisitsTotals.getTotalVisits()));
+		visitsTable.add(totalVisits);
+
+		// Average Visits
+		StringBuilder avgVisitsStr = new StringBuilder();
+		avgVisitsStr.append(summaryVisitsTotals.getLast7DaysVisitsAverage());
+		avgVisitsStr.append('/');
+		avgVisitsStr.append(summaryVisitsTotals.getLast30DaysVisitsAverage());
+		avgVisitsStr.append('/');
+		avgVisitsStr.append(summaryVisitsTotals.getLast365DaysVisitsAverage());
+		final Label avgVisits = new Label("avgVisits", avgVisitsStr.toString());
+		visitsTable.add(avgVisits);
+
+		// Total Unique Visits
+		final Label totalUniqueVisits = new Label("totalUniqueVisits", String.valueOf(summaryVisitsTotals.getTotalUniqueVisits()));
+		visitsTable.add(totalUniqueVisits);
+
+		// Total Unique Visits / Total logged in users
+		StringBuilder totalUniqueVisitsRelStr = new StringBuilder();
+		totalUniqueVisitsRelStr.append(summaryVisitsTotals.getTotalUniqueVisits());
+		totalUniqueVisitsRelStr.append('/');
+		totalUniqueVisitsRelStr.append(summaryVisitsTotals.getTotalUsers());
+		totalUniqueVisitsRelStr.append(" (");
+		totalUniqueVisitsRelStr.append(summaryVisitsTotals.getPercentageOfUsersThatVisitedSite());
+		totalUniqueVisitsRelStr.append("%)");
+		final Label totalUniqueVisitsRel = new Label("totalUniqueVisitsRel", totalUniqueVisitsRelStr.toString());
+		visitsTable.add(totalUniqueVisitsRel);
+		
+		return visitsTableContainer;
+	}
+	
+
+	/** Render chart. */
+	@SuppressWarnings("serial")
+	public void renderChart() {
+		chart = new AjaxLazyLoadImage("chart", null, OverviewPage.class) {
+			@Override
+			public BufferedImage getBufferedImage() {
+				return getChartImage();
+			}
+
+			@Override
+			public BufferedImage getBufferedMaximizedImage() {
+				return getChartImage(maximizedWidth, maximizedHeight);
+			}
+		};
+		add(chart);
+	}
+	
+	public BufferedImage getChartImage() {
+		return getChartImage(selectedWidth, selectedHeight);
+	}
+	
+	public BufferedImage getChartImage(int width, int height) {
+		PrefsData prefsData = facade.getStatsManager().getPreferences(siteId, false);
+		int _width = (width <= 0) ? 350 : width;
+		int _height = (height <= 0) ? 200: height;
+		BufferedImage img = facade.getChartService().generateVisitsChart(
+				siteId, selectedView, 
+				_width, _height,
+				prefsData.isChartIn3D(), prefsData.getChartTransparency(),
+				prefsData.isItemLabelsVisible());
+		return img;
+	}
+
+	public final String getSelectedView() {
+		return selectedView;
+	}
+
+	public final void setSelectedView(String selectedView) {
+		this.selectedView = selectedView;
+		
+		boolean inLastWeek = StatsManager.VIEW_WEEK.equals(selectedView);
+		boolean inLastMonth = StatsManager.VIEW_MONTH.equals(selectedView);
+		boolean inLastYear = StatsManager.VIEW_YEAR.equals(selectedView);
+		lastWeekLink.setVisible(!inLastWeek);
+		lastWeekLabel.setVisible(inLastWeek);
+		lastMonthLink.setVisible(!inLastMonth);
+		lastMonthLabel.setVisible(inLastMonth);
+		lastYearLink.setVisible(!inLastYear);
+		lastYearLabel.setVisible(inLastYear);
+		chart.renderImage();
+	}
+
+	public Collection<Component> setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {
+		selectedWidth = width;
+		selectedHeight = height;
+		this.maximizedWidth = maximizedWidth;
+		this.maximizedHeight = maximizedHeight;
+		chart.renderImage();
+		List<Component> list = new ArrayList<Component>();
+		list.add(chart);
+		return list;
+	}
+
+}

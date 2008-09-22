@@ -7,13 +7,16 @@ import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.component.cover.ServerConfigurationService;
 import org.sakaiproject.site.cover.SiteService;
+import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
 import org.sakaiproject.tool.cover.SessionManager;
 import org.sakaiproject.util.ResourceLoader;
 
 
 public class BasePage extends WebPage implements IHeaderContributor {
+	
 	private static final long		serialVersionUID	= 1L;
 	protected static final String	HEADSCRIPTS			= "/library/js/headscripts.js";
 	protected static final String	BODY_ONLOAD_ADDTL	= "setMainFrameHeight( window.name )";
@@ -35,7 +38,7 @@ public class BasePage extends WebPage implements IHeaderContributor {
 		response.renderOnLoadJavascript(BODY_ONLOAD_ADDTL);
 
 		// include (this) tool style (CSS)
-		response.renderCSSReference("/sakai-feeds-tool/css/style.css");
+		response.renderCSSReference("/sakai-sitestats-tool/css/sitestats.css");
 	}
 
 	protected String getToolSkinCSS(String skinRepo) {

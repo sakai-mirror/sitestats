@@ -38,6 +38,7 @@ public class SiteStatsApplication extends WebApplication {
 
 		// On wicket session timeout or wicket exception, redirect to main page
 		getApplicationSettings().setPageExpiredErrorPage(OverviewPage.class);
+		getApplicationSettings().setAccessDeniedPage(OverviewPage.class);
 		getApplicationSettings().setInternalErrorPage(OverviewPage.class);
 
 		// show internal error page rather than default developer page
