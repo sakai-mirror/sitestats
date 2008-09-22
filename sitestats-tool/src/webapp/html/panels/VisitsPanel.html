@@ -24,7 +24,7 @@
                 <td class="halfSize" wicket:id="visitsTableContainer">
                         <span wicket:id="visitsTablePre"></span>
                         <wicket:fragment wicket:id="visitsTableFrag">
-	                        <table wicket:id="visitsTable" class="summaryTable">
+	                        <table wicket:id="visitsTable" class="summaryTable visitsTable" style="display: none;">
 	                            <tbody>
 	                                <tr>
 	                                    <td><label class="indnt0"><wicket:message key="overview_title_visits_sum">[visits]</wicket:message></label></td>
@@ -52,6 +52,7 @@
 	                                </tr>
 	                            </tbody>
 	                        </table>
+	                        <script type="text/javascript"> jQuery('.visitsTable').slideDown(); </script>
                         </wicket:fragment>
                 </td>
             </tr>

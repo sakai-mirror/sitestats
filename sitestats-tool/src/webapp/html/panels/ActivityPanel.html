@@ -43,7 +43,7 @@
                 <td class="halfSize" wicket:id="activityTableContainer">
                         <span wicket:id="activityTablePre"></span>
                         <wicket:fragment wicket:id="activityTableFrag">
-	                        <table wicket:id="activityTable" class="summaryTable">
+	                        <table wicket:id="activityTable" class="summaryTable activityTable" style="display: none;">
 	                            <tbody>
 	                                <tr>
 	                                    <td><label class="indnt0"><wicket:message key="overview_title_activity_sum">[activity]</wicket:message></label></td>
@@ -59,6 +59,7 @@
 	                                </tr>
 	                            </tbody>
 	                        </table>
+                            <script type="text/javascript"> jQuery('.activityTable').slideDown(); </script>
                         </wicket:fragment>
                 </td>
             </tr>
