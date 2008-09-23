@@ -1,30 +1,21 @@
 package org.sakaiproject.sitestats.tool.wicket.panels;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.IAjaxCallDecorator;
-import org.apache.wicket.ajax.calldecorator.AjaxCallDecorator;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxLink;
-import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.internal.HtmlHeaderContainer;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.sitestats.api.PrefsData;
 import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.sitestats.api.SummaryActivityTotals;
-import org.sakaiproject.sitestats.api.SummaryVisitsTotals;
 import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
+import org.sakaiproject.sitestats.tool.wicket.components.AjaxLazyLoadFragment;
 import org.sakaiproject.sitestats.tool.wicket.components.AjaxLazyLoadImage;
 import org.sakaiproject.sitestats.tool.wicket.pages.OverviewPage;
 
@@ -67,10 +58,9 @@ public class ActivityPanel extends Panel {
 	private WebMarkupContainer		pieChartLegend			= null;
 	private WebMarkupContainer		barChartLegend			= null;
 
-
+	private AjaxLazyLoadFragment	activityLoader			= null;	
 	private WebMarkupContainer		activityTable			= null;
 	private Fragment 				activityTableFrag		= null;
-	private WebMarkupContainer		activityTableContainer = null;
 
 	private AjaxLazyLoadImage		chart					= null;
 
@@ -103,7 +93,6 @@ public class ActivityPanel extends Panel {
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
-				//target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
 			}			
 		};
 		lastWeekLink.setVisible(!inLastWeek);
@@ -121,7 +110,6 @@ public class ActivityPanel extends Panel {
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
-				//target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
 			}
 		};
 		lastMonthLink.setVisible(!inLastMonth);
@@ -139,7 +127,6 @@ public class ActivityPanel extends Panel {
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
-				//target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
 			}
 
 		};
@@ -158,7 +145,6 @@ public class ActivityPanel extends Panel {
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
-				//target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
 			}
 
 		};
@@ -177,7 +163,6 @@ public class ActivityPanel extends Panel {
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
-				//target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
 			}
 
 		};
@@ -190,25 +175,23 @@ public class ActivityPanel extends Panel {
 
 	/** Render table. */
 	private void renderTable() {
-		activityTableContainer = new WebMarkupContainer("activityTableContainer");
-		activityTableContainer.setOutputMarkupId(true);
-		add(activityTableContainer);
-		
-		WebMarkupContainer activityTablePre = new WebMarkupContainer("activityTablePre");
-		activityTablePre.setOutputMarkupId(true);
-		activityTableContainer.add(activityTablePre);
+		activityLoader = new AjaxLazyLoadFragment("activityTableContainer") {
+			@Override
+			public Fragment getLazyLoadFragment(String markupId) {
+				return renderTableData(markupId);
+			}			
+		};
+		add(activityLoader);
 	}
 	
 	/** Render table data. */
-	public Component renderTableData() {
-		SummaryActivityTotals summaryActivityTotals = facade.getStatsManager().getSummaryActivityTotals(siteId);
-
-		activityTableContainer.removeAll();
-		activityTableFrag = new Fragment("activityTablePre", "activityTableFrag");
-		activityTableFrag.setOutputMarkupId(true);
-		activityTableContainer.add(activityTableFrag);
+	private Fragment renderTableData(String markupId) {
+		// markup
+		activityTableFrag = new Fragment(markupId, "activityTableFragment", this);
 		activityTable = new WebMarkupContainer("activityTable");
 		activityTableFrag.add(activityTable);
+		
+		SummaryActivityTotals summaryActivityTotals = facade.getStatsManager().getSummaryActivityTotals(siteId);
 
 		// Total visits
 		final Label totalActivity = new Label("totalActivity", String.valueOf(summaryActivityTotals.getTotalActivity()));
@@ -224,14 +207,14 @@ public class ActivityPanel extends Panel {
 		final Label avgActivity = new Label("avgActivity", avgActivityStr.toString());
 		activityTable.add(avgActivity);
 		
-		return activityTableContainer;
+		return activityTableFrag;
 	}
 
 	/** Render chart. */
 	@SuppressWarnings("serial")
 	public void renderChart() {
 		// chart
-		chart = new AjaxLazyLoadImage("chart", null, OverviewPage.class) {
+		chart = new AjaxLazyLoadImage("activityChart", null, OverviewPage.class) {
 			@Override
 			public BufferedImage getBufferedImage() {
 				return getChartImage();
@@ -259,11 +242,11 @@ public class ActivityPanel extends Panel {
 		chartLegendContainer.add(barChartLegend);
 	}
 	
-	public BufferedImage getChartImage() {
+	private BufferedImage getChartImage() {
 		return getChartImage(selectedWidth, selectedHeight);
 	}
 	
-	public BufferedImage getChartImage(int width, int height) {
+	private BufferedImage getChartImage(int width, int height) {
 		PrefsData prefsData = facade.getStatsManager().getPreferences(siteId, false);
 		int _width = (width <= 0) ? 350 : width;
 		int _height = (height <= 0) ? 200: height;
@@ -312,16 +295,12 @@ public class ActivityPanel extends Panel {
 		chart.renderImage();
 	}
 
-	public Collection<Component> setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {
-		selectedWidth = width;
-		selectedHeight = height;
+	public void setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {
+		this.selectedWidth = width;
+		this.selectedHeight = height;
 		this.maximizedWidth = maximizedWidth;
 		this.maximizedHeight = maximizedHeight;
-		chart.renderImage();
-		List<Component> list = new ArrayList<Component>();
-		list.add(chart);
-		list.add(chartLegendContainer);
-		return list;
+		chart.startAjaxUpdate();
 	}
 
 }

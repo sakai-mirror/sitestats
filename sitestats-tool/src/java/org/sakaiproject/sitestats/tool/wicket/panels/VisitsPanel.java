@@ -1,19 +1,11 @@
 package org.sakaiproject.sitestats.tool.wicket.panels;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.IndicatingAjaxLink;
-import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.MarkupStream;
-import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Fragment;
@@ -23,6 +15,7 @@ import org.sakaiproject.sitestats.api.PrefsData;
 import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.sitestats.api.SummaryVisitsTotals;
 import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
+import org.sakaiproject.sitestats.tool.wicket.components.AjaxLazyLoadFragment;
 import org.sakaiproject.sitestats.tool.wicket.components.AjaxLazyLoadImage;
 import org.sakaiproject.sitestats.tool.wicket.pages.OverviewPage;
 
@@ -57,9 +50,9 @@ public class VisitsPanel extends Panel {
 	private IndicatingAjaxLink		lastYearLink		= null;
 	private WebMarkupContainer		lastYearLabel		= null;
 
+	private AjaxLazyLoadFragment	visitsLoader		= null;
 	private WebMarkupContainer		visitsTable			= null;
 	private Fragment 				visitsTableFrag		= null;
-	private WebMarkupContainer		visitsTableContainer = null;
 
 	private AjaxLazyLoadImage		chart				= null;
 
@@ -134,27 +127,26 @@ public class VisitsPanel extends Panel {
 	}
 
 	/** Render table. */
+	@SuppressWarnings("serial")
 	private void renderTable() {
-		visitsTableContainer = new WebMarkupContainer("visitsTableContainer");
-		visitsTableContainer.setOutputMarkupId(true);
-		add(visitsTableContainer);
-		
-		WebMarkupContainer visitsTablePre = new WebMarkupContainer("visitsTablePre");
-		visitsTablePre.setOutputMarkupId(true);
-		visitsTableContainer.add(visitsTablePre);
+		visitsLoader = new AjaxLazyLoadFragment("visitsTableContainer") {
+			@Override
+			public Fragment getLazyLoadFragment(String markupId) {
+				return renderTableData(markupId);
+			}			
+		};
+		add(visitsLoader);
 	}
 	
 	/** Render data. */
 	@SuppressWarnings("deprecation")
-	public Component renderTableData() {
-		SummaryVisitsTotals summaryVisitsTotals = facade.getStatsManager().getSummaryVisitsTotals(siteId);
-
-		visitsTableContainer.removeAll();
-		visitsTableFrag = new Fragment("visitsTablePre", "visitsTableFrag");
-		visitsTableFrag.setOutputMarkupId(true);
-		visitsTableContainer.add(visitsTableFrag);
-		visitsTable = new WebMarkupContainer("visitsTable");
+	private Fragment renderTableData(String markupId) {
+		// markup
+		visitsTableFrag = new Fragment(markupId, "visitsTableFragment", this);
+		visitsTable = new WebMarkupContainer("visitsTableData");
 		visitsTableFrag.add(visitsTable);
+		
+		SummaryVisitsTotals summaryVisitsTotals = facade.getStatsManager().getSummaryVisitsTotals(siteId);
 		
 		// Total visits
 		final Label totalVisits = new Label("totalVisits", String.valueOf(summaryVisitsTotals.getTotalVisits()));
@@ -185,14 +177,14 @@ public class VisitsPanel extends Panel {
 		final Label totalUniqueVisitsRel = new Label("totalUniqueVisitsRel", totalUniqueVisitsRelStr.toString());
 		visitsTable.add(totalUniqueVisitsRel);
 		
-		return visitsTableContainer;
+		return visitsTableFrag;
 	}
 	
 
 	/** Render chart. */
 	@SuppressWarnings("serial")
 	public void renderChart() {
-		chart = new AjaxLazyLoadImage("chart", null, OverviewPage.class) {
+		chart = new AjaxLazyLoadImage("visitsChart", null, OverviewPage.class) {
 			@Override
 			public BufferedImage getBufferedImage() {
 				return getChartImage();
@@ -206,11 +198,11 @@ public class VisitsPanel extends Panel {
 		add(chart);
 	}
 	
-	public BufferedImage getChartImage() {
+	private BufferedImage getChartImage() {
 		return getChartImage(selectedWidth, selectedHeight);
 	}
 	
-	public BufferedImage getChartImage(int width, int height) {
+	private BufferedImage getChartImage(int width, int height) {
 		PrefsData prefsData = facade.getStatsManager().getPreferences(siteId, false);
 		int _width = (width <= 0) ? 350 : width;
 		int _height = (height <= 0) ? 200: height;
@@ -241,15 +233,12 @@ public class VisitsPanel extends Panel {
 		chart.renderImage();
 	}
 
-	public Collection<Component> setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {
-		selectedWidth = width;
-		selectedHeight = height;
+	public void setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {
+		this.selectedWidth = width;
+		this.selectedHeight = height;
 		this.maximizedWidth = maximizedWidth;
 		this.maximizedHeight = maximizedHeight;
-		chart.renderImage();
-		List<Component> list = new ArrayList<Component>();
-		list.add(chart);
-		return list;
+		chart.startAjaxUpdate();
 	}
 
 }

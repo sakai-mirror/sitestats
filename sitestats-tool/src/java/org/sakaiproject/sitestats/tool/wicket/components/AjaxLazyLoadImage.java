@@ -3,10 +3,15 @@ package org.sakaiproject.sitestats.tool.wicket.components;
 import java.awt.image.BufferedImage;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Resource;
+import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.image.NonCachingImage;
@@ -14,14 +19,18 @@ import org.apache.wicket.markup.html.image.resource.DynamicImageResource;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.util.time.Duration;
 import org.sakaiproject.sitestats.tool.wicket.pages.MaximizedImagePage;
 
 @SuppressWarnings("serial")
 public abstract class AjaxLazyLoadImage extends Panel {
 	private Link						link								= null;
+	private WebMarkupContainer			js									= null;
 	private Class						returnPage							= null;
+	private boolean						startAjaxUpdate						= false;
+	private boolean						doneAjaxUpdate						= false;
 
-	public AjaxLazyLoadImage(String id, BufferedImage bufferedImage, Class returnPage) {
+	public AjaxLazyLoadImage(final String id, final BufferedImage bufferedImage, final Class returnPage) {
 		super(id);
 		setOutputMarkupId(true);
 		this.returnPage = returnPage;
@@ -31,6 +40,22 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		link.setEnabled(false);
 		link.add(loadingComponent.setRenderBodyOnly(true));
 		add(link);
+		
+		js = new WebMarkupContainer("js") {
+			@Override
+			protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
+				String jsFadein = "jQuery('#"+link.getMarkupId(true)+"').fadeIn();";
+				replaceComponentTagBody(markupStream, openTag, jsFadein);
+			}	
+		};
+		js.setOutputMarkupId(true);
+		add(js);
+
+		add(new MyAbstractDefaultAjaxBehavior(Duration.ONE_SECOND));
+	}
+	
+	public void startAjaxUpdate() {
+		startAjaxUpdate = true;
 	}
 	
 	public void renderImage() {
@@ -88,5 +113,31 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		};
 		chartImage.setOutputMarkupId(true);
 		return chartImage;
+	}
+	
+	class MyAbstractDefaultAjaxBehavior extends AbstractAjaxTimerBehavior {
+		
+		public MyAbstractDefaultAjaxBehavior(Duration updateInterval) {
+			super(updateInterval);
+		}
+
+		@Override
+		protected void onTimer(AjaxRequestTarget target) {
+			if(startAjaxUpdate) {
+				if(!doneAjaxUpdate) {
+					renderImage();
+					target.addComponent(link);
+					target.addComponent(js);
+					doneAjaxUpdate = true;
+					stop();
+				}
+			}
+		}
+
+		public void renderHead(IHeaderResponse response) {
+			super.renderHead(response);
+			response.renderOnDomReadyJavascript(getCallbackScript(false).toString());
+		}
+		
 	}
 }

@@ -1,14 +1,13 @@
 package org.sakaiproject.sitestats.tool.wicket.panels;
 
-import java.util.Collection;
 import java.util.Date;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.Request;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -36,6 +35,8 @@ public class OverviewPanel extends Panel {
 	// UI Components
 	private VisitsPanel				visitsPanel			= null;
 	private ActivityPanel			activityPanel		= null;
+	
+	private AbstractDefaultAjaxBehavior chartSizeBehavior = null;
 
 	/**
 	 * Default constructor.
@@ -58,23 +59,10 @@ public class OverviewPanel extends Panel {
 	}
 	
 	@SuppressWarnings("serial")
-	private void renderAjaxBehavior() {
-		add(new AbstractDefaultAjaxBehavior() {
-			private boolean loaded = false;
-			
-			@Override
-			public void renderHead(IHeaderResponse response) {
-				super.renderHead(response);
-		    	System.out.println("OverviewPanel.abstractDefaultAjaxBehavior.renderHead()");
-				if(!loaded) {
-					response.renderOnDomReadyJavascript(getAjaxLoadFunction());
-					loaded = true;
-				}
-			}
-
+	private void renderAjaxBehavior() {		
+		chartSizeBehavior = new AbstractDefaultAjaxBehavior() {
 			@Override
 			protected void respond(AjaxRequestTarget target) {
-		    	System.out.println("OverviewPanel.abstractDefaultAjaxBehavior.respond()");
 				// get chart size
 		    	Request req = RequestCycle.get().getRequest();
 		    	int width;
@@ -82,7 +70,7 @@ public class OverviewPanel extends Panel {
 		    	int maxwidth;
 		    	int maxheight;
 				try{
-					width = (int) Float.parseFloat(req.getParameter("width"));
+					width = (int) Float.parseFloat(req.getParameter("width"));					
 				}catch(NumberFormatException e){
 					e.printStackTrace();
 					width = 400;
@@ -106,39 +94,34 @@ public class OverviewPanel extends Panel {
 					maxheight = 300;
 				}
 				
-				// render visits chart & table
+				// set visits chart size
 				if(visitsPanel != null) {
-					Collection<Component> toRefresh = visitsPanel.setChartSize(width, height, maxwidth, maxheight);
-					for(Component c : toRefresh) {
-						target.addComponent(c);
-					}
-					target.addComponent(visitsPanel.renderTableData());
+					visitsPanel.setChartSize(width, height, maxwidth, maxheight);
 				}
-				// render activity chart & table
+				// set activity chart size
 				if(activityPanel != null) {
-					Collection<Component> toRefresh = activityPanel.setChartSize(width, height, maxwidth, maxheight);
-					for(Component c : toRefresh) {
-						target.addComponent(c);
-					}
-					target.addComponent(activityPanel.renderTableData());
+					activityPanel.setChartSize(width, height, maxwidth, maxheight);
 				}
-				// fix UI height
-				target.appendJavascript("setMainFrameHeightNoScroll( window.name, 642 )");
-			}
-
-			private String getAjaxLoadFunction() {
+			}		   
+		};
+		add(chartSizeBehavior);
+		
+		WebMarkupContainer js = new WebMarkupContainer("jsWicketChartSize");
+		js.setOutputMarkupId(true);
+		add(js);
+		WebMarkupContainer jsCall = new WebMarkupContainer("jsWicketChartSizeCall") {
+			@Override
+			protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
 				StringBuilder buff = new StringBuilder();
-				buff.append("wicketAjaxGet('");
-				buff.append(getCallbackUrl());
-				buff.append("&width='+((jQuery(('.sectionContainerNav')[0]).width() - 10) / 2)+'");
-				buff.append("&height='+200+'");
-				buff.append("&maxwidth='+(jQuery(('#overview')).width())+'");
-				buff.append("&maxheight='+(jQuery(('#overview')).width() / 2)");
-				buff.append(", function() {}, function() {})");
-				return buff.toString();
-			}
-		   
-		});
+				buff.append("jQuery(document).ready(function() {");
+				buff.append("  var chartSizeCallback = '" + chartSizeBehavior.getCallbackUrl() + "'; ");
+				buff.append("  setWicketChartSize(chartSizeCallback);");
+				buff.append("});");
+				replaceComponentTagBody(markupStream, openTag, buff.toString());
+			}	
+		};
+		jsCall.setOutputMarkupId(true);
+		add(jsCall);
 	}
 
 	/** Render body. */

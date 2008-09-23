@@ -2,8 +2,6 @@ package org.sakaiproject.sitestats.tool.wicket.pages;
 
 import java.awt.image.BufferedImage;
 
-import org.apache.wicket.Page;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.Resource;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;

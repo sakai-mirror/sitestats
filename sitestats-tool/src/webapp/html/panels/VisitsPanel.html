@@ -4,7 +4,7 @@
     <table id="visitsTable" class="sectionContainerNav" style="width: 100%;">
         <tbody>
             <tr>
-                <td wicket:id="selectors" class="halfSize left">
+                <td wicket:id="selectors" class="halfSize left" style="width: 50%">
                     <!-- Selectors -->
                     <a wicket:id="lastWeekLink" class="selector"><wicket:message key="submenu_week">[last week]</wicket:message></a>
                     <span wicket:id="lastWeekLabel" class="selector"><wicket:message key="submenu_week">[last week]</wicket:message></span>
@@ -15,16 +15,16 @@
                     <a wicket:id="lastYearLink" class="selector"><wicket:message key="submenu_year">[last year]</wicket:message></a>
                     <span wicket:id="lastYearLabel" class="selector"><wicket:message key="submenu_year">[last year]</wicket:message></span>
                 </td>
-                <td class="halfSize right"></td>
+                <td class="halfSize right" style="width: 50%"></td>
             </tr>
             <tr>
                 <td class="halfSize">
-                    <span wicket:id="chart"></span>
+                    <span wicket:id="visitsChart" style="display: block; height: 200px"></span>
                 </td>
-                <td class="halfSize" wicket:id="visitsTableContainer">
-                        <span wicket:id="visitsTablePre"></span>
-                        <wicket:fragment wicket:id="visitsTableFrag">
-	                        <table wicket:id="visitsTable" class="summaryTable visitsTable" style="display: none;">
+                <td class="halfSize">
+                        <span wicket:id="visitsTableContainer" class="visitsTableContainer"></span>
+                        <wicket:fragment wicket:id="visitsTableFragment">
+	                        <table wicket:id="visitsTableData" class="summaryTable visitsTableData" style="display: none;">
 	                            <tbody>
 	                                <tr>
 	                                    <td><label class="indnt0"><wicket:message key="overview_title_visits_sum">[visits]</wicket:message></label></td>
@@ -52,7 +52,7 @@
 	                                </tr>
 	                            </tbody>
 	                        </table>
-	                        <script type="text/javascript"> jQuery('.visitsTable').slideDown(); </script>
+	                        <script type="text/javascript"> jQuery('.visitsTableData').fadeIn(); </script>
                         </wicket:fragment>
                 </td>
             </tr>

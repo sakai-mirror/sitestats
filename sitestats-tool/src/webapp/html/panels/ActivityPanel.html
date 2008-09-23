@@ -4,7 +4,7 @@
     <table id="activityTable" class="sectionContainerNav" style="width: 100%;">
         <tbody>
             <tr>
-                <td wicket:id="selectors" class="halfSize left">
+                <td wicket:id="selectors" class="halfSize left" style="width: 50%">
                     <div class="left" style="width: 60%">
 	                    <!-- Selectors -->
 	                    <a wicket:id="lastWeekLink" class="selector"><wicket:message key="submenu_week">[last week]</wicket:message></a>
@@ -25,11 +25,11 @@
                         <span wicket:id="barLabel" class="selector"><wicket:message key="submenu_byDate">[by date]</wicket:message></span>
                     </div>
                 </td>
-                <td class="halfSize right"></td>
+                <td class="halfSize right" style="width: 50%"></td>
             </tr>
             <tr>
                 <td class="halfSize">
-                    <span wicket:id="chart"></span>
+                    <span wicket:id="activityChart" style="display: block; height: 200px"></span>
                     <br/>
                     <div wicket:id="chartLegendContainer">
 	                    <span wicket:id="pieChartLegend" class="instruction" style="padding-left: 5px">
@@ -40,9 +40,9 @@
 	                    </span>
                     </div>
                 </td>
-                <td class="halfSize" wicket:id="activityTableContainer">
-                        <span wicket:id="activityTablePre"></span>
-                        <wicket:fragment wicket:id="activityTableFrag">
+                <td class="halfSize">
+                        <span wicket:id="activityTableContainer"></span>
+                        <wicket:fragment wicket:id="activityTableFragment">
 	                        <table wicket:id="activityTable" class="summaryTable activityTable" style="display: none;">
 	                            <tbody>
 	                                <tr>
@@ -59,7 +59,7 @@
 	                                </tr>
 	                            </tbody>
 	                        </table>
-                            <script type="text/javascript"> jQuery('.activityTable').slideDown(); </script>
+                            <script type="text/javascript"> jQuery('.activityTable').fadeIn(); </script>
                         </wicket:fragment>
                 </td>
             </tr>
