@@ -10,6 +10,7 @@ import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.internal.HtmlHeaderContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -53,9 +54,21 @@ public class OverviewPanel extends Panel {
 	 */
 	public OverviewPanel(String id, String siteId) {
 		super(id);
+		// site id
 		this.siteId = siteId;
+		currentSiteId = facade.getToolManager().getCurrentPlacement().getContext();
+		if(this.siteId == null){
+			this.siteId = currentSiteId;
+		}
 		renderBody();
 		renderAjaxBehavior();
+	}
+
+	@Override
+	public void renderHead(HtmlHeaderContainer container) {
+		container.getHeaderResponse().renderJavascriptReference("/library/js/jquery.js");
+		container.getHeaderResponse().renderJavascriptReference("/sakai-sitestats-tool/script/common.js");
+		super.renderHead(container);
 	}
 	
 	@SuppressWarnings("serial")
@@ -125,13 +138,7 @@ public class OverviewPanel extends Panel {
 	}
 
 	/** Render body. */
-	private void renderBody() {
-		// site id
-		currentSiteId = facade.getToolManager().getCurrentPlacement().getContext();
-		if(siteId == null){
-			siteId = currentSiteId;
-		}
-		
+	private void renderBody() {		
 		// SiteStats services
 		StatsManager statsManager = facade.getStatsManager();
 		StatsUpdateManager statsUpdateManager = facade.getStatsUpdateManager();

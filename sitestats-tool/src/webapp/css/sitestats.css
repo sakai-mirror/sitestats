@@ -137,6 +137,15 @@ label.indnt1 {
 	color: #555555;
 }
 
+.eventTree li {
+    list-style: none;	
+}
+
+.navIcon {
+    cursor: pointer;
+    float: left;
+}
+
 .nodeIcon {
 	vertical-align: bottom;
 }

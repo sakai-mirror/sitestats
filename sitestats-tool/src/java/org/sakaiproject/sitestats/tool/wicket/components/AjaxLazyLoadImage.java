@@ -2,6 +2,7 @@ package org.sakaiproject.sitestats.tool.wicket.components;
 
 import java.awt.image.BufferedImage;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Resource;
@@ -18,6 +19,7 @@ import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.image.resource.DynamicImageResource;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.util.time.Duration;
 import org.sakaiproject.sitestats.tool.wicket.pages.MaximizedImagePage;
@@ -70,7 +72,10 @@ public abstract class AjaxLazyLoadImage extends Panel {
 	 * @return The component to show while the real component is being created.
 	 */
 	public Component getLoadingComponent(String markupId) {
-		return new Label(markupId, "<img src=\"" + RequestCycle.get().urlFor(AbstractDefaultAjaxBehavior.INDICATOR) + "\"/>").setEscapeModelStrings(false);
+		Label indicator = new Label(markupId, "<img src=\"" + RequestCycle.get().urlFor(AbstractDefaultAjaxBehavior.INDICATOR) + "\"/>");
+		indicator.setEscapeModelStrings(false);
+		indicator.add(new AttributeModifier("title", true, new Model("...")));
+		return indicator;
 	}
 
 	public abstract BufferedImage getBufferedImage();

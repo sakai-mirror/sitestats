@@ -7,8 +7,6 @@ import org.sakaiproject.sitestats.tool.wicket.pages.AdminPage;
 
 public class SiteStatsAdminApplication extends SiteStatsApplication {
 	
-	private SakaiFacade	facade;
-
 	protected void init() {
 		super.init();
 

@@ -60,7 +60,7 @@ function setMainFrameHeightNoScroll(id, minHeight)
 
 	// no need to be smaller than...
 	//if (height < 200) height = 200;
-	objToResize.height=newHeight + "px";
+	objToResize.height=newHeight + 5 + "px";
 
 
 	var s = " scrollH: " + scrollH + " offsetH: " + offsetH + " clientH: " + clientH + " innerDocScrollH: " + innerDocScrollH + " Read height: " + height + " Set height to: " + newHeight;
