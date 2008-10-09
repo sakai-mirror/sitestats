@@ -312,12 +312,11 @@ public class ReportsPage extends BasePage {
 		final RepeatingView selectOptionsRV = new RepeatingView("selectOptionsRV");
 		final Select whoUserIds = new Select("reportParams.whoUserIds");
 		final Radio whoCustom = new Radio("who-custom", new Model("who-custom"));
-		final WicketAjaxIndicatorAppender whoCustomAjaxIndicator = new WicketAjaxIndicatorAppender();
 		
 		// left radio selectors
 		RadioGroup who = null;
 		if(!ReportManager.WHO_CUSTOM.equals(reportParams.getWho())) {
-			who = new IndicatingAjaxRadioGroup("reportParams.who", ReportManager.WHO_CUSTOM, whoCustomAjaxIndicator) {
+			who = new IndicatingAjaxRadioGroup("reportParams.who", ReportManager.WHO_CUSTOM) {
 				@Override
 				protected void onUpdate(AjaxRequestTarget target) {
 					removeAjaxUpdatingBehavior();
@@ -341,9 +340,7 @@ public class ReportsPage extends BasePage {
 		WebMarkupContainer whoGroupTr = new WebMarkupContainer("who-groups-tr");
 		who.add(whoGroupTr);
 		whoGroupTr.add(new Radio("who-groups", new Model("who-groups")));
-		whoCustom.add(whoCustomAjaxIndicator);
 		who.add(whoCustom);
-		who.add(whoCustomAjaxIndicator);
 		who.add(new Radio("who-none", new Model("who-none")));	
 		
 		// users (part 2)

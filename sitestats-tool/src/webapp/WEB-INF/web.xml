@@ -7,15 +7,11 @@
 	<description>Site Stats Tool</description>
     <distributable />
     
-    <!-- TODO:
-        - Simulate EntryServlet.java
-        - Redirect to admin view if admin tool version
-    -->
     
     <!-- Wicket mode (development/deployment) -->
     <context-param>
         <param-name>configuration</param-name>
-        <param-value>development</param-value>
+        <param-value>deployment</param-value>
     </context-param>
     
 
@@ -82,12 +78,6 @@
     <listener>
         <listener-class>org.sakaiproject.util.ContextLoaderListener</listener-class>
     </listener>
-
-    <!--
-    <session-config>
-        <session-timeout>5</session-timeout>
-    </session-config>
-    -->
     
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

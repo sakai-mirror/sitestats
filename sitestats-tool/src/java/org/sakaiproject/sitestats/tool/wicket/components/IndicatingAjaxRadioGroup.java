@@ -12,31 +12,21 @@ public abstract class IndicatingAjaxRadioGroup extends RadioGroup implements IAj
 	private static final long						serialVersionUID	= 1L;
 	private AjaxFormChoiceComponentUpdatingBehavior	ajaxUpdatingBehavior;
 	private Object 									forModelObjectOnly;
-	private WicketAjaxIndicatorAppender				indicatorAppender;
-	private WicketAjaxIndicatorAppender				customAjaxIndicator;
+	private WicketAjaxIndicatorAppender				indicatorAppender  	= new WicketAjaxIndicatorAppender();;
 
 	public IndicatingAjaxRadioGroup(final String id) {
 		this(id, null, null);
 	}
 
 	public IndicatingAjaxRadioGroup(final String id, final Object forModelObjectOnly) {
-		this(id, null, forModelObjectOnly, null);
-	}
-
-	public IndicatingAjaxRadioGroup(final String id, final Object forModelObjectOnly, final WicketAjaxIndicatorAppender customAjaxIndicator) {
-		this(id, null, forModelObjectOnly, customAjaxIndicator);
+		this(id, null, forModelObjectOnly);
 	}
 	
-	public IndicatingAjaxRadioGroup(final String id, final IModel model, final Object forModelObjectOnly, final WicketAjaxIndicatorAppender customAjaxIndicator) {
+	public IndicatingAjaxRadioGroup(final String id, final IModel model, final Object forModelObjectOnly) {
 		super(id, model);
 		setOutputMarkupId(true);
 		this.forModelObjectOnly = forModelObjectOnly;
-		if(customAjaxIndicator != null) {
-			this.customAjaxIndicator = customAjaxIndicator;
-		}else{
-			indicatorAppender = new WicketAjaxIndicatorAppender();
-			add(indicatorAppender);
-		}
+		add(indicatorAppender);
 		ajaxUpdatingBehavior = new AjaxFormChoiceComponentUpdatingBehavior() {
 			private static final long	serialVersionUID	= 1L;
 
@@ -64,11 +54,7 @@ public abstract class IndicatingAjaxRadioGroup extends RadioGroup implements IAj
 
 	public String getAjaxIndicatorMarkupId() {
 		if(forModelObjectOnly != null && forModelObjectOnly.equals(getModelObject())) {
-			if(customAjaxIndicator != null) {
-				return customAjaxIndicator.getMarkupId();
-			}else{
-				return indicatorAppender.getMarkupId();
-			}
+			return indicatorAppender.getMarkupId();
 		}else{
 			return null;
 		}

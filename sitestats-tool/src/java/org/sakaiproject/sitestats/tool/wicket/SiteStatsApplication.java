@@ -3,8 +3,17 @@ package org.sakaiproject.sitestats.tool.wicket;
 import java.util.Locale;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
+import org.apache.wicket.Request;
+import org.apache.wicket.RequestCycle;
+import org.apache.wicket.Response;
+import org.apache.wicket.Session;
+import org.apache.wicket.markup.html.pages.ExceptionErrorPage;
 import org.apache.wicket.protocol.http.HttpSessionStore;
 import org.apache.wicket.protocol.http.WebApplication;
+import org.apache.wicket.protocol.http.WebRequest;
+import org.apache.wicket.protocol.http.WebRequestCycle;
+import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.session.ISessionStore;
 import org.apache.wicket.settings.IExceptionSettings;
@@ -36,13 +45,9 @@ public class SiteStatsApplication extends WebApplication {
 		// Home page
 		mountBookmarkablePage("/home", OverviewPage.class);
 
-		// On wicket session timeout or wicket exception, redirect to main page
+		// On wicket session timeout, redirect to main page
 		getApplicationSettings().setPageExpiredErrorPage(OverviewPage.class);
 		getApplicationSettings().setAccessDeniedPage(OverviewPage.class);
-		getApplicationSettings().setInternalErrorPage(OverviewPage.class);
-
-		// show internal error page rather than default developer page
-		getExceptionSettings().setUnexpectedExceptionDisplay(IExceptionSettings.SHOW_INTERNAL_ERROR_PAGE);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -63,6 +68,21 @@ public class SiteStatsApplication extends WebApplication {
 		// SecondLevelCacheSessionStore causes problems with Ajax requests;
 		// => use HttpSessionStore instead.
 		return new HttpSessionStore(this);
+	}
+	@Override
+	public Session newSession(Request request, Response response) {
+		// TODO Auto-generated method stub
+		return super.newSession(request, response);
+	}
+	@Override
+	public RequestCycle newRequestCycle(Request request, Response response) {
+		return new WebRequestCycle(this, (WebRequest)request, (WebResponse)response) {
+			@Override
+			public Page onRuntimeException(Page page, RuntimeException e) {
+				// Let Sakai ErrorReportHandler (BugReport) handle errors
+				throw e;
+			}
+		};
 	}
 
 	/**
