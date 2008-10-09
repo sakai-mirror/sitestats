@@ -8,13 +8,58 @@
     <head>        
         <wicket:head></wicket:head>
     </head>
+    
 	<body>
 		<wicket:extend>
+		    <!-- Initial callback (determine chart size) -->
+            <script wicket:id="jsWicketChartSize" type="text/javascript">
+                function setWicketChartSize(callback) {  
+                    wicketAjaxGet(
+                            callback
+                            + '&width='+getChartWidth()
+                            + '&height='+getChartHeight()
+                            + '&maxwidth='+getMaximizedChartWidth()
+                            + '&maxheight='+getMaximizedChartHeight(), 
+                            function() {}, function() {});  
+                } 
+                function getChartWidth() {
+                    return (jQuery("#overview").width() - 10) / 2;
+                }
+                function getChartHeight() {
+                    return 200;
+                }
+                function getMaximizedChartWidth() {
+                    return jQuery("#overview").width();
+                }
+                function getMaximizedChartHeight() {
+                    return jQuery("#overview").width() / 2;
+                }
+            </script>
+            <script wicket:id="jsWicketChartSizeCall" type="text/javascript"></script>
+		
+		    <!-- Menu -->
             <menu wicket:id="menu" class="navIntraTool">[menu]</menu>
 		
-            <h2><wicket:message key="menu_overview">[menu_overview]</wicket:message></h2>
+		    <!-- Page title -->
+            <h2>
+                <wicket:message key="menu_overview">[menu_overview]</wicket:message>
+                <span wicket:id="site">:&nbsp;<span wicket:id="siteTitle">[siteTitle]</span></span>
+            </h2>
 		    
-		    <span wicket:id="overview">[overview]</span>
+		    <!-- Last Job run -->
+		    <span wicket:id="lastJobRun"></span>
+		    
+		     <div id="overview" style="width: 100%">
+		        <!-- Visits -->
+		        <span wicket:id="visits">
+		            <span wicket:id="visitsPanel"></span>
+		        </span>
+		        
+		        <!-- Activity -->
+		        <span wicket:id="activity">
+		            <span wicket:id="activityPanel"></span>
+		        </span>
+		    </div>
 		    
 		</wicket:extend>
 	</body>

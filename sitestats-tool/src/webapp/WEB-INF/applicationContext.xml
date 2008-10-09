@@ -13,6 +13,7 @@
         <property name="chartService" ref="org.sakaiproject.sitestats.api.chart.ChartService" />
         <property name="reportManager" ref="org.sakaiproject.sitestats.api.report.ReportManager" />
         <property name="statsUpdateManager" ref="org.sakaiproject.sitestats.api.StatsUpdateManager" />
+        <property name="serverWideReportManager" ref="org.sakaiproject.sitestats.api.ServerWideReportManager" />
 		<!-- Sakai services -->
 		<property name="sessionManager" ref="org.sakaiproject.tool.api.SessionManager" />
         <property name="toolManager" ref="org.sakaiproject.tool.api.ToolManager" />

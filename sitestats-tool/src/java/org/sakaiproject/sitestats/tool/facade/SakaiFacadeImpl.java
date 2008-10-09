@@ -3,6 +3,7 @@ package org.sakaiproject.sitestats.tool.facade;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.sitestats.api.ServerWideReportManager;
 import org.sakaiproject.sitestats.api.StatsAuthz;
 import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.sitestats.api.StatsUpdateManager;
@@ -24,6 +25,7 @@ public class SakaiFacadeImpl implements SakaiFacade {
 	private ReportManager			reportManager;
 	private ChartService			chartService;
 	private StatsUpdateManager		statsUpdateManager;
+	private ServerWideReportManager serverWideReportManager;
 
 	// Sakai services
 	private SessionManager			sessionManager;
@@ -80,6 +82,14 @@ public class SakaiFacadeImpl implements SakaiFacade {
 
 	public final void setStatsUpdateManager(StatsUpdateManager statsUpdateManager) {
 		this.statsUpdateManager = statsUpdateManager;
+	}
+
+	public final ServerWideReportManager getServerWideReportManager() {
+		return serverWideReportManager;
+	}
+
+	public final void setServerWideReportManager(ServerWideReportManager serverWideReportManager) {
+		this.serverWideReportManager = serverWideReportManager;
 	}
 
 	public final SessionManager getSessionManager() {

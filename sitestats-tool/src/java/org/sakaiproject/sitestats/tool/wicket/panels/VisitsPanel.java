@@ -198,6 +198,10 @@ public class VisitsPanel extends Panel {
 		add(chart);
 	}
 	
+	public CharSequence getChartCallbackUrl() {
+		return chart.getCallbackUrl();
+	}
+	
 	private BufferedImage getChartImage() {
 		return getChartImage(selectedWidth, selectedHeight);
 	}
@@ -238,7 +242,6 @@ public class VisitsPanel extends Panel {
 		this.selectedHeight = height;
 		this.maximizedWidth = maximizedWidth;
 		this.maximizedHeight = maximizedHeight;
-		chart.startAjaxUpdate();
 	}
 
 }

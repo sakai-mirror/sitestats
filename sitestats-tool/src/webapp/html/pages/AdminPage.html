@@ -10,7 +10,27 @@
     </head>
 	<body>
 		<wicket:extend>
+            <menu wicket:id="menu" class="navIntraTool">[menu]</menu>
+            
 		    <h2><wicket:message key="menu_sitelist">[menu_sitelist]</wicket:message></h2>
+		    <span class="instruction"><wicket:message key="instructions_sitelist">[instructions]</wicket:message></span>
+		    
+		    <div class="navPanel">
+                <div class="viewNav">
+                    <wicket:message key="site_type">[site_type]</wicket:message>
+                    <select wicket:id="siteTypes">
+                        <option>option</option>
+                    </select>
+                </div>
+                <div class="searchNav">
+                    <span wicket:id="search"></span>
+                </div>
+		    </div>
+		    
+		    <div style="width:100%">
+		      <table class="listHier lines" cellspacing="0" wicket:id="table">[table]</table>
+		    </div>
+		    
 		</wicket:extend>
 	</body>
 </html>

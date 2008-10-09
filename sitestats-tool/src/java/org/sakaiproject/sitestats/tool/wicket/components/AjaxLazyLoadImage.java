@@ -6,12 +6,10 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Resource;
-import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
-import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
@@ -19,9 +17,10 @@ import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.image.resource.DynamicImageResource;
 import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.WebResponse;
-import org.apache.wicket.util.time.Duration;
 import org.sakaiproject.sitestats.tool.wicket.pages.MaximizedImagePage;
 
 @SuppressWarnings("serial")
@@ -29,16 +28,20 @@ public abstract class AjaxLazyLoadImage extends Panel {
 	private Link						link								= null;
 	private WebMarkupContainer			js									= null;
 	private Class						returnPage							= null;
-	private boolean						startAjaxUpdate						= false;
-	private boolean						doneAjaxUpdate						= false;
+	private AbstractDefaultAjaxBehavior ajaxBehavior						= null;
 
 	public AjaxLazyLoadImage(final String id, final BufferedImage bufferedImage, final Class returnPage) {
+		this(id, bufferedImage, returnPage, new ResourceModel("overview_back"));
+	}
+	
+	public AjaxLazyLoadImage(final String id, final BufferedImage bufferedImage, final Class returnPage, final IModel backButtonMessageModel) {
 		super(id);
 		setOutputMarkupId(true);
 		this.returnPage = returnPage;
 		final Component loadingComponent = getLoadingComponent("content");
 		
-		link = createMaximizedLink("link");
+		link = createMaximizedLink("link", backButtonMessageModel);
+		link.setOutputMarkupId(true);
 		link.setEnabled(false);
 		link.add(loadingComponent.setRenderBodyOnly(true));
 		add(link);
@@ -52,12 +55,20 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		};
 		js.setOutputMarkupId(true);
 		add(js);
-
-		add(new MyAbstractDefaultAjaxBehavior(Duration.ONE_SECOND));
+		
+		ajaxBehavior = new AbstractDefaultAjaxBehavior() {
+			@Override
+			protected void respond(AjaxRequestTarget target) {
+				renderImage();
+				target.addComponent(link);
+				target.addComponent(js);
+			}			
+		};
+		add(ajaxBehavior);
 	}
 	
-	public void startAjaxUpdate() {
-		startAjaxUpdate = true;
+	public CharSequence getCallbackUrl() {
+		return ajaxBehavior.getCallbackUrl();
 	}
 	
 	public void renderImage() {
@@ -82,11 +93,11 @@ public abstract class AjaxLazyLoadImage extends Panel {
 
 	public abstract BufferedImage getBufferedMaximizedImage();
 
-	private Link createMaximizedLink(final String id) {
+	private Link createMaximizedLink(final String id, final IModel backButtonMessageModel) {
 		Link link = new Link(id) {
 			@Override
 			public void onClick() {
-				setResponsePage(new MaximizedImagePage(getBufferedMaximizedImage(), returnPage));
+				setResponsePage(new MaximizedImagePage(getBufferedMaximizedImage(), returnPage, backButtonMessageModel));
 			}			
 		};
 		link.setOutputMarkupId(true);
@@ -118,31 +129,5 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		};
 		chartImage.setOutputMarkupId(true);
 		return chartImage;
-	}
-	
-	class MyAbstractDefaultAjaxBehavior extends AbstractAjaxTimerBehavior {
-		
-		public MyAbstractDefaultAjaxBehavior(Duration updateInterval) {
-			super(updateInterval);
-		}
-
-		@Override
-		protected void onTimer(AjaxRequestTarget target) {
-			if(startAjaxUpdate) {
-				if(!doneAjaxUpdate) {
-					renderImage();
-					target.addComponent(link);
-					target.addComponent(js);
-					doneAjaxUpdate = true;
-					stop();
-				}
-			}
-		}
-
-		public void renderHead(IHeaderResponse response) {
-			super.renderHead(response);
-			response.renderOnDomReadyJavascript(getCallbackScript(false).toString());
-		}
-		
 	}
 }

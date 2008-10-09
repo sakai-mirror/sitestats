@@ -26,27 +26,27 @@ public class EventRegistryTree extends Panel {
 	private Rows		rows 				= null;
 
 	public EventRegistryTree(String id, List<?> eventRegistry) {
-		this(id, eventRegistry, false);
+		this(id, eventRegistry, null);
 	}
 	
-	public EventRegistryTree(String id, List<?> eventRegistry, boolean isChildNode) {
+	public EventRegistryTree(String id, List<?> eventRegistry, String toolId) {
 		super(id);
 		this.eventRegistry = eventRegistry;
 		WebMarkupContainer ul = new WebMarkupContainer("ul");
-		if(isChildNode) {
+		if(toolId != null) {
 			ul.add(new AttributeModifier("style", true, new Model("padding: 0 0 0 20px;")));
 		}else{
 			ul.add(new AttributeModifier("style", true, new Model("padding: 0px;")));
 		}
 		add(ul);
-		rows = new Rows("rows", eventRegistry);
+		rows = new Rows("rows", eventRegistry, toolId);
 		ul.add(rows);
 	}
 
 	@Override
 	public void renderHead(HtmlHeaderContainer container) {
 		container.getHeaderResponse().renderJavascriptReference("/sakai-sitestats-tool/script/prefs.js");
-		container.getHeaderResponse().renderOnDomReadyJavascript("updateToolSelection()");
+		container.getHeaderResponse().renderOnDomReadyJavascript("updateAllToolsSelection()");
 		super.renderHead(container);
 	}
 
@@ -59,14 +59,16 @@ public class EventRegistryTree extends Panel {
 	}
 
 	private static class Rows extends ListView {
+		private String		currentToolId		= null;
 		/**
 		 * Construct.
 		 * @param name name of the component
 		 * @param list a list where each element is either a string or another
 		 *            list
 		 */
-		public Rows(String name, List list) {
+		public Rows(String name, List list, String toolId) {
 			super(name, list);
+			this.currentToolId = toolId;
 		}
 
 		/**
@@ -94,11 +96,11 @@ public class EventRegistryTree extends Panel {
 				row.add(new ExternalImage("image", "images/silk/icons/application_side_boxes.png"));
 				row.add(new Label("label", new Model(ti.getToolName())));
 				CheckBox toolCheckBox = new CheckBox("checkbox", new PropertyModel(ti, "selected"));
-				toolCheckBox.add(new AttributeModifier("onclick", true, new Model("selectUnselectEvents(this); updateToolSelection();")));
+				toolCheckBox.add(new AttributeModifier("onclick", true, new Model("selectUnselectEvents(this); updateToolSelection('.tool_"+toolId+"');")));
 				row.add(toolCheckBox);
 				listItem.add(row);
 				
-				EventRegistryTree nested = new EventRegistryTree("nested", ti.getEvents(), true);
+				EventRegistryTree nested = new EventRegistryTree("nested", ti.getEvents(), toolId);
 				nested.add(new AttributeModifier("class", true, new Model(toolId)));
                 listItem.add(nested);
                 
@@ -111,7 +113,7 @@ public class EventRegistryTree extends Panel {
 				row.add(new ExternalImage("image", "images/silk/icons/bullet_feed.png"));
 				row.add(new Label("label", new Model(ei.getEventName())));
 				CheckBox eventCheckBox = new CheckBox("checkbox", new PropertyModel(ei, "selected"));
-				eventCheckBox.add(new AttributeModifier("onclick", true, new Model("updateToolSelection();")));
+				eventCheckBox.add(new AttributeModifier("onclick", true, new Model("updateToolSelection('.tool_"+currentToolId+"');")));
 				row.add(eventCheckBox);
 				listItem.add(row);
 				

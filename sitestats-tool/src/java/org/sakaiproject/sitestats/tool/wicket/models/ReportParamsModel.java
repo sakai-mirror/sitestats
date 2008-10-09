@@ -1,30 +1,37 @@
-package org.sakaiproject.sitestats.tool.bean;
+package org.sakaiproject.sitestats.tool.wicket.models;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.wicket.model.Model;
 import org.sakaiproject.sitestats.api.report.ReportManager;
 import org.sakaiproject.sitestats.api.report.ReportParams;
 
-public class ReportParamsBean implements ReportParams {
-	private String			what				= ReportManager.WHAT_VISITS;
-	private String			whatEventSelType	= ReportManager.WHAT_EVENTS_BYTOOL;
-	private List<String> 	whatToolIds			= new ArrayList<String>();
-	private List<String>	whatEventIds		= new ArrayList<String>();
-	private List<String> 	whatResourceIds		= new ArrayList<String>();
-	private String 			whatResourceAction	= ReportManager.WHAT_RESOURCES_ACTION_NEW;
-	private String 			when				= ReportManager.WHEN_LAST7DAYS;
-	private Date 			whenFrom;
-	private Date 			whenTo;
-	private String 			who					= ReportManager.WHO_ALL;
-	private String 			whoRoleId;
-	private String 			whoGroupId;
-	private List<String> 	whoUserIds			= new ArrayList<String>();
+
+public class ReportParamsModel extends Model implements ReportParams {
+	private static final long	serialVersionUID		= 1L;
+	private String				siteId;
+	private String				what					= ReportManager.WHAT_VISITS;
+	private String				whatEventSelType		= ReportManager.WHAT_EVENTS_BYTOOL;
+	private List<String>		whatToolIds				= new ArrayList<String>();
+	private List<String>		whatEventIds			= new ArrayList<String>();
+	private boolean				whatLimitedAction		= false;
+	private boolean				whatLimitedResourceIds	= false;
+	private List<String>		whatResourceIds			= new ArrayList<String>();
+	private String				whatResourceAction		= ReportManager.WHAT_RESOURCES_ACTION_NEW;
+	private String				when					= ReportManager.WHEN_LAST7DAYS;
+	private Date				whenFrom;
+	private Date				whenTo;
+	private String				who						= ReportManager.WHO_ALL;
+	private String				whoRoleId;
+	private String				whoGroupId;
+	private List<String>		whoUserIds				= new ArrayList<String>();
 
 	
-	public ReportParamsBean(){
+	public ReportParamsModel(String siteId){
+		this.siteId = siteId;
 		whenFrom = new Date();
 		Calendar c = Calendar.getInstance();
 		c.add(Calendar.DAY_OF_MONTH, -1);
@@ -35,13 +42,16 @@ public class ReportParamsBean implements ReportParams {
 		whenTo = new Date();
 	}
 	
-	public ReportParamsBean(String what, List<String> whatToolIds, List<String> whatEventIds, String whatResourceAction, List<String> whatResourceIds, String when, Date whenFrom, Date whenTo, String who, String whoRoleId, String whoGroupId, List<String> whoUserIds) {
+	public ReportParamsModel(String siteId, String what, List<String> whatToolIds, List<String> whatEventIds, String whatResourceAction, List<String> whatResourceIds, String when, Date whenFrom, Date whenTo, String who, String whoRoleId, String whoGroupId, List<String> whoUserIds) {
 		super();
+		this.siteId = siteId;
 		this.what = what;
 		this.whatToolIds = whatToolIds;
 		this.whatEventIds = whatEventIds;
 		this.whatResourceAction = whatResourceAction;
+		this.whatLimitedAction = whatResourceAction != null;
 		this.whatResourceIds = whatResourceIds;
+		this.whatLimitedResourceIds = whatResourceIds != null;
 		this.when = when;
 		this.whenFrom = whenFrom;
 		this.whenTo = whenTo;
@@ -49,6 +59,20 @@ public class ReportParamsBean implements ReportParams {
 		this.whoRoleId = whoRoleId;
 		this.whoGroupId = whoGroupId;
 		this.whoUserIds = whoUserIds;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.report.ReportParams#getSiteId()
+	 */
+	public String getSiteId() {
+		return siteId;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.report.ReportParams#setWherSiteId(java.lang.String)
+	 */
+	public void setSiteId(String siteId) {
+		this.siteId = siteId;
 	}
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.impl.ReportParams#getWhat()
@@ -88,11 +112,31 @@ public class ReportParamsBean implements ReportParams {
 	public void setWhatEventIds(List<String> whatEventIds) {
 		this.whatEventIds = whatEventIds;
 	}
+	public void setWhatLimitedAction(boolean whatLimitedAction) {
+		this.whatLimitedAction = whatLimitedAction;
+	}
+
+	public boolean isWhatLimitedAction() {
+		return whatLimitedAction;
+	}
+
+	public void setWhatLimitedResourceIds(boolean whatLimitedResourceIds) {
+		this.whatLimitedResourceIds = whatLimitedResourceIds;
+	}
+
+	public boolean isWhatLimitedResourceIds() {
+		return whatLimitedResourceIds;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.impl.ReportParams#getWhatResourceIds()
 	 */
 	public List<String> getWhatResourceIds() {
-		return whatResourceIds;
+		if(isWhatLimitedResourceIds()) {
+			return whatResourceIds;
+		}else{
+			return new ArrayList<String>();
+		}
 	}
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.impl.ReportParams#setWhatResourceIds(java.util.List)
@@ -104,7 +148,11 @@ public class ReportParamsBean implements ReportParams {
 	 * @see org.sakaiproject.sitestats.api.ReportParams#getWhatResourceAction()
 	 */
 	public String getWhatResourceAction(){
-		return whatResourceAction;
+		if(isWhatLimitedAction()) {
+			return whatResourceAction;
+		}else{
+			return null;
+		}
 	}
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.api.ReportParams#setWhatResourceAction(java.lang.String)
@@ -200,7 +248,11 @@ public class ReportParamsBean implements ReportParams {
 	 * @see org.sakaiproject.sitestats.impl.ReportParams#getWhoUserIds()
 	 */
 	public List<String> getWhoUserIds() {
-		return whoUserIds;
+		if(ReportManager.WHO_CUSTOM.equals(getWho())) {
+			return whoUserIds;
+		}else{
+			return new ArrayList<String>();
+		}
 	}
 	/* (non-Javadoc)
 	 * @see org.sakaiproject.sitestats.impl.ReportParams#setWhoUserIds(java.util.List)
@@ -210,4 +262,81 @@ public class ReportParamsBean implements ReportParams {
 	}
 	
 	
+	// ------------------------------------------------------------
+	// Output functions (String, XML)
+	// ------------------------------------------------------------	
+	@Override
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		str.append('{');		
+		str.append(memberToString("siteId", siteId, true));
+		str.append(memberToString("what", what, true));
+		if(ReportManager.WHAT_EVENTS.equals(what)) {
+			str.append(memberToString("whatEventSelType", whatEventSelType, true));
+			if(ReportManager.WHAT_EVENTS_BYTOOL.equals(whatEventSelType)) {
+				str.append(memberToString("whatToolIds", whatToolIds, true));
+			}else{
+				str.append(memberToString("whatEventIds", whatEventIds, true));
+			}
+		}else if(ReportManager.WHAT_RESOURCES.equals(what)) {
+			if(whatResourceAction != null) {
+				str.append(memberToString("whatResourceAction", whatResourceAction, true));
+			}
+			if(whatResourceIds != null) {
+				str.append(memberToString("whatResourceIds", whatResourceIds, true));
+			}
+		}
+		str.append(memberToString("when", when, true));
+		if(ReportManager.WHEN_CUSTOM.equals(when)) {
+			str.append(memberToString("whenFrom", whenFrom.toString(), true));
+			str.append(memberToString("whenTo", whenTo.toString(), true));
+		}
+		if(ReportManager.WHO_ALL.equals(who)) {
+			str.append(memberToString("who", who, false));
+		}else{
+			str.append(memberToString("who", who, true));
+		}
+		if(ReportManager.WHO_GROUPS.equals(who)) {
+			str.append(memberToString("whoGroupId", whoGroupId, false));
+		}
+		if(ReportManager.WHO_ROLE.equals(who)) {
+			str.append(memberToString("whoRoleId", whoRoleId, false));
+		}
+		if(ReportManager.WHO_CUSTOM.equals(who)) {
+			str.append(memberToString("whoUserIds", whoUserIds, false));
+		}		
+		str.append('}');
+		return str.toString();
+	}
+	
+	private String memberToString(String member, String value, boolean hasMore) {
+		StringBuilder str = new StringBuilder();
+		str.append(member);
+		str.append(": ");
+		str.append(value);
+		if(hasMore) {
+			str.append(", ");
+		}
+		return str.toString();
+	}
+	
+	private String memberToString(String member, List<String> values, boolean hasMore) {
+		StringBuilder str = new StringBuilder();
+		str.append(member);
+		str.append(": ");
+		str.append('[');
+		boolean first = true;
+		for(String value : values) {
+			if(!first) {
+				str.append(", ");				
+			}
+			str.append(value);
+			first = false;
+		}
+		str.append(']');
+		if(hasMore) {
+			str.append(", ");
+		}
+		return str.toString();
+	}
 }

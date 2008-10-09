@@ -9,27 +9,28 @@
 	text-align: left;
 	width: auto;
 }
-
 .left {
 	text-align: left;
 	float: left;
 	width: 100%
 }
 .leftAlign {
-        text-align: left;
+    text-align: left;
 }
-
-
+.rightAlign {
+    text-align: right;
+}
+.centerAlign {
+    text-align: center;
+}
 .center {
 	text-align: center;
 }
-
 .right {
 	text-align: right;
 	float: right;
 	width: 100%;
 }
-
 .top {
 	vertical-align: top;
 }
@@ -155,4 +156,18 @@ label.indnt1 {
 	color: #555555;
 	/*font-size:85%;*/
 	font-weight: normal;
+}
+
+/* Wicket table sorting indicator */
+.wicket_orderUp a span {
+    background-image: url('/library/image/sakai/sortascending.gif');
+    background-repeat: no-repeat;
+    background-position:right center;
+    padding-right: 16px;
+}
+.wicket_orderDown a span {
+    background-image: url('/library/image/sakai/sortdescending.gif');
+    background-repeat: no-repeat;
+    background-position: right center;
+    padding-right: 16px;
 }

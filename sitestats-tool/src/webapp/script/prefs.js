@@ -6,8 +6,14 @@ function selectUnselectEvents(obj) {
 	}
 }
 
-function updateToolSelection() {
-	jQuery('.tool').each(function(i){
+
+
+function updateAllToolsSelection() {
+	updateToolSelection('.tool');
+}
+
+function updateToolSelection(toolClass) {
+	jQuery(toolClass).each(function(i){
 		jQuery(this).children('span').removeClass();
 		
 		// tool class

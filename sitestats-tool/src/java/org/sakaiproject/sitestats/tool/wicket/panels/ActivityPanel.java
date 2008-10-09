@@ -242,6 +242,10 @@ public class ActivityPanel extends Panel {
 		chartLegendContainer.add(barChartLegend);
 	}
 	
+	public CharSequence getChartCallbackUrl() {
+		return chart.getCallbackUrl();
+	}
+	
 	private BufferedImage getChartImage() {
 		return getChartImage(selectedWidth, selectedHeight);
 	}
@@ -300,7 +304,6 @@ public class ActivityPanel extends Panel {
 		this.selectedHeight = height;
 		this.maximizedWidth = maximizedWidth;
 		this.maximizedHeight = maximizedHeight;
-		chart.startAjaxUpdate();
 	}
 
 }

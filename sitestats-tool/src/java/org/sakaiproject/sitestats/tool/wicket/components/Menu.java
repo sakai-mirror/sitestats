@@ -1,6 +1,7 @@
 package org.sakaiproject.sitestats.tool.wicket.components;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
@@ -11,7 +12,6 @@ import org.sakaiproject.sitestats.tool.wicket.pages.AdminPage;
 import org.sakaiproject.sitestats.tool.wicket.pages.OverviewPage;
 import org.sakaiproject.sitestats.tool.wicket.pages.PreferencesPage;
 import org.sakaiproject.sitestats.tool.wicket.pages.ReportsPage;
-import org.sakaiproject.sitestats.tool.wicket.pages.ServerWidePage;
 
 
 /**
@@ -32,69 +32,69 @@ public class Menu extends Panel {
 		setRenderBodyOnly(true);
 		renderBody();
 	}
+
+	/**
+	 * Default constructor.
+	 * @param id The wicket:id
+	 */
+	public Menu(String id, String siteId) {
+		super(id);
+		setRenderBodyOnly(true);
+		renderBody(siteId);
+	}
 	
 	/**
-	 * Render Sakai Menu
+	 * Render Sakai Menu for current site
 	 */
 	@SuppressWarnings("unchecked")
 	private void renderBody() {
-		// site id
-		String siteId = facade.getToolManager().getCurrentPlacement().getContext();
+		renderBody(facade.getToolManager().getCurrentPlacement().getContext());
+	}
+	
+	/**
+	 * Render Sakai Menu for specified site id
+	 */
+	@SuppressWarnings("unchecked")
+	private void renderBody(String siteId) {
+		// current page
 		Class currentPageClass = getRequestCycle().getResponsePageClass();
-				
-		// --------- ADMIN SECTION ---------
+		PageParameters pageParameters = new PageParameters();
+		if(siteId != null) {
+			pageParameters.put("siteId", siteId);
+		}
 		
 		// Admin page
 		boolean adminPageVisible = 
 			facade.getStatsAuthz().isUserAbleToViewSiteStatsAdmin(siteId);
-		MenuItem adminPage = new MenuItem("adminPage", new ResourceModel("menu_overview"), AdminPage.class);
-		adminPage.setVisible(adminPageVisible);
-		if(adminPageVisible) {
+		MenuItem adminPage = new MenuItem("adminPage", new ResourceModel("menu_sitelist"), AdminPage.class, pageParameters, adminPageVisible);
+		/*if(adminPageVisible) {
 			adminPage.add(new AttributeModifier("class", true, new Model("firstToolBarItem")));
-		}
+		}*/
+		adminPage.setVisible(adminPageVisible);
+		adminPage.add(new AttributeModifier("class", true, new Model("firstToolBarItem")));
 		add(adminPage);
-		
-		// Admin ServerWide page
-		boolean serverWidePageVisible = 
-			adminPageVisible
-			&&
-			facade.getStatsManager().isServerWideStatsEnabled();
-		MenuItem serverWidePage = new MenuItem("serverWidePage", new ResourceModel("menu_serverwide"), ServerWidePage.class);
-		serverWidePage.setVisible(serverWidePageVisible);
-		add(serverWidePage);
-		
-		// --------- USER SECTION ---------
 
 		// Overview
 		boolean overviewVisible = 
-			!AdminPage.class.equals(currentPageClass)
-			&&
-			!ServerWidePage.class.equals(currentPageClass)			
+			!AdminPage.class.equals(currentPageClass)		
 			&&
 			(facade.getStatsManager().isEnableSiteVisits() || facade.getStatsManager().isEnableSiteActivity());
-		MenuItem overview = new MenuItem("overview", new ResourceModel("menu_overview"), OverviewPage.class);
+		MenuItem overview = new MenuItem("overview", new ResourceModel("menu_overview"), OverviewPage.class, pageParameters, overviewVisible && !adminPageVisible);
 		overview.setVisible(overviewVisible);
-		if(!adminPageVisible) {
+		/*if(overviewVisible && !adminPageVisible) {
 			overview.add(new AttributeModifier("class", true, new Model("firstToolBarItem")));
-		}
+		}*/
 		add(overview);
 
 		// Reports
-		boolean reportsVisible = 
-			!AdminPage.class.equals(currentPageClass)
-			&&
-			!ServerWidePage.class.equals(currentPageClass);
-		MenuItem reports = new MenuItem("reports", new ResourceModel("menu_reports"), ReportsPage.class);
-		reports.setVisible(reportsVisible);
+		MenuItem reports = new MenuItem("reports", new ResourceModel("menu_reports"), ReportsPage.class, pageParameters, false);
+		if(!overviewVisible) {
+			reports.add(new AttributeModifier("class", true, new Model("firstToolBarItem")));
+		}
 		add(reports);
 
 		// Preferences
-		boolean preferencesVisible = 
-			!AdminPage.class.equals(currentPageClass)
-			&&
-			!ServerWidePage.class.equals(currentPageClass);
-		MenuItem preferences = new MenuItem("preferences", new ResourceModel("menu_prefs"), PreferencesPage.class);
-		preferences.setVisible(preferencesVisible);
+		MenuItem preferences = new MenuItem("preferences", new ResourceModel("menu_prefs"), PreferencesPage.class, pageParameters, false);
 		add(preferences);
 		
 	}

@@ -72,11 +72,18 @@ public class SiteStatsApplication extends WebApplication {
 	private static class SiteStatsStringResourceLoader implements IStringResourceLoader {
 		private ResourceLoader	messages	= new ResourceLoader("Messages");
 		private ResourceLoader	events		= new ResourceLoader("Events");
+		private ResourceLoader	nav			= new ResourceLoader("Navigator");
 
 		public String loadStringResource(Component component, String key) {
-			String value = messages.getString(key);
-			if(value == null){
-				value = events.getString(key);
+			String value = null;
+			if(messages.containsKey(key)) {
+				value = messages.getString(key, null);
+			}
+			if(value == null && events.containsKey(key)){
+				value = events.getString(key, null);
+			}
+			if(value == null && nav.containsKey(key)){
+				value = nav.getString(key, null);
 			}
 			if(value == null){
 				value = key;
@@ -85,13 +92,18 @@ public class SiteStatsApplication extends WebApplication {
 		}
 
 		public String loadStringResource(Class clazz, String key, Locale locale, String style) {
-			ResourceLoader msgs = new ResourceLoader("Events");
+			ResourceLoader msgs = new ResourceLoader("Messages");
 			msgs.setContextLocale(locale);
-			String value = msgs.getString(key);
+			String value = msgs.getString(key, null);
 			if(value == null){
 				ResourceLoader evnts = new ResourceLoader("Events");
 				evnts.setContextLocale(locale);
-				value = evnts.getString(key);
+				value = evnts.getString(key, null);
+			}
+			if(value == null){
+				ResourceLoader nav = new ResourceLoader("Navigator");
+				nav.setContextLocale(locale);
+				value = nav.getString(key, null);
 			}
 			if(value == null){
 				value = key;

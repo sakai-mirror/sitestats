@@ -7,6 +7,8 @@ import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.image.resource.DynamicImageResource;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
@@ -21,14 +23,20 @@ public class MaximizedImagePage extends BasePage {
 	
 	private BufferedImage 			bufferedImage;
 	private Class					returnPage;
+	private IModel					backButtonMessageModel;
 	
 	
 	public MaximizedImagePage(final BufferedImage bufferedImage, final Class returnPage) {
+		this(bufferedImage, returnPage, new ResourceModel("overview_back"));
+	}
+	
+	public MaximizedImagePage(final BufferedImage bufferedImage, final Class returnPage, IModel backButtonMessageModel) {
 		String siteId = facade.getToolManager().getCurrentPlacement().getContext();
 		boolean allowed = facade.getStatsAuthz().isUserAbleToViewSiteStats(siteId);
 		if(allowed) {
 			this.bufferedImage = bufferedImage;
 			this.returnPage = returnPage;
+			this.backButtonMessageModel = backButtonMessageModel;
 			renderBody();
 		}else{
 			redirectToInterceptPage(new NotAuthorizedPage());
@@ -72,6 +80,7 @@ public class MaximizedImagePage extends BasePage {
 				super.onSubmit();
 			}
 		};
+		back.setModel(backButtonMessageModel);
 		back.setDefaultFormProcessing(true);
 		form.add(back);
 	}

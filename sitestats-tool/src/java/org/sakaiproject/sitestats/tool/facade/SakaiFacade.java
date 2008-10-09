@@ -3,6 +3,7 @@ package org.sakaiproject.sitestats.tool.facade;
 import org.sakaiproject.authz.api.AuthzGroupService;
 import org.sakaiproject.content.api.ContentHostingService;
 import org.sakaiproject.site.api.SiteService;
+import org.sakaiproject.sitestats.api.ServerWideReportManager;
 import org.sakaiproject.sitestats.api.StatsAuthz;
 import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.sitestats.api.StatsUpdateManager;
@@ -25,6 +26,7 @@ public interface SakaiFacade {
 	public ReportManager getReportManager();
 	public ChartService getChartService();
 	public StatsUpdateManager getStatsUpdateManager();
+	public ServerWideReportManager getServerWideReportManager();
 
 	// Sakai services
 	
