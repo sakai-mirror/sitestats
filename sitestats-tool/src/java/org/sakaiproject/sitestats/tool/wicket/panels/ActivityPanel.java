@@ -89,7 +89,7 @@ public class ActivityPanel extends Panel {
 		lastWeekLink = new IndicatingAjaxLink("lastWeekLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_WEEK);
+				setSelectedView(target, StatsManager.VIEW_WEEK);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
@@ -106,7 +106,7 @@ public class ActivityPanel extends Panel {
 		lastMonthLink = new IndicatingAjaxLink("lastMonthLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_MONTH);
+				setSelectedView(target, StatsManager.VIEW_MONTH);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
@@ -123,7 +123,7 @@ public class ActivityPanel extends Panel {
 		lastYearLink = new IndicatingAjaxLink("lastYearLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_YEAR);
+				setSelectedView(target, StatsManager.VIEW_YEAR);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
@@ -141,7 +141,7 @@ public class ActivityPanel extends Panel {
 		pieLink = new IndicatingAjaxLink("pieLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedType(StatsManager.CHARTTYPE_PIE);
+				setSelectedType(target, StatsManager.CHARTTYPE_PIE);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
@@ -159,7 +159,7 @@ public class ActivityPanel extends Panel {
 		barLink = new IndicatingAjaxLink("barLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedType(StatsManager.CHARTTYPE_BAR);
+				setSelectedType(target, StatsManager.CHARTTYPE_BAR);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 				target.addComponent(chartLegendContainer);
@@ -266,7 +266,7 @@ public class ActivityPanel extends Panel {
 		return selectedView;
 	}
 
-	public final void setSelectedView(String selectedView) {
+	public final void setSelectedView(AjaxRequestTarget target, String selectedView) {
 		this.selectedView = selectedView;
 		
 		boolean inLastWeek = StatsManager.VIEW_WEEK.equals(selectedView);
@@ -278,14 +278,14 @@ public class ActivityPanel extends Panel {
 		lastMonthLabel.setVisible(inLastMonth);
 		lastYearLink.setVisible(!inLastYear);
 		lastYearLabel.setVisible(inLastYear);
-		chart.renderImage();
+		chart.renderImage(target);
 	}
 
 	public final String getSelectedType() {
 		return selectedType;
 	}
 
-	public final void setSelectedType(String selectedType) {
+	public final void setSelectedType(AjaxRequestTarget target, String selectedType) {
 		this.selectedType = selectedType;
 
 		boolean inPie = StatsManager.CHARTTYPE_PIE.equals(selectedType);
@@ -296,7 +296,7 @@ public class ActivityPanel extends Panel {
 		barLabel.setVisible(inBar);	
 		pieChartLegend.setVisible(inPie);
 		barChartLegend.setVisible(inBar);
-		chart.renderImage();
+		chart.renderImage(target);
 	}
 
 	public void setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {

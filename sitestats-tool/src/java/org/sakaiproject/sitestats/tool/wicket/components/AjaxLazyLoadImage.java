@@ -8,6 +8,7 @@ import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Resource;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.IAjaxCallDecorator;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -46,23 +47,12 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		link.add(loadingComponent.setRenderBodyOnly(true));
 		add(link);
 		
-		js = new WebMarkupContainer("js") {
-			@Override
-			protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
-				String jsFadein = "jQuery('#"+link.getMarkupId(true)+"').fadeIn();";
-				replaceComponentTagBody(markupStream, openTag, jsFadein);
-			}	
-		};
-		js.setOutputMarkupId(true);
-		add(js);
-		
 		ajaxBehavior = new AbstractDefaultAjaxBehavior() {
 			@Override
 			protected void respond(AjaxRequestTarget target) {
-				renderImage();
-				target.addComponent(link);
-				target.addComponent(js);
-			}			
+				renderImage(target);
+				target.addComponent(link);				
+			}	
 		};
 		add(ajaxBehavior);
 	}
@@ -71,10 +61,15 @@ public abstract class AjaxLazyLoadImage extends Panel {
 		return ajaxBehavior.getCallbackUrl();
 	}
 	
-	public void renderImage() {
+	public Image renderImage(AjaxRequestTarget target) {
 		link.setEnabled(true);
 		link.removeAll();
-		link.add(createImage("content", getBufferedImage()));
+		Image img = createImage("content", getBufferedImage());
+		link.add(img);
+		if(target != null) {
+			target.appendJavascript("jQuery('#"+img.getMarkupId(true)+"').fadeIn();");
+		}
+		return img;
 	}
 
 	/**

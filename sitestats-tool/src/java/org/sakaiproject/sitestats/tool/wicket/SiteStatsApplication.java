@@ -8,6 +8,7 @@ import org.apache.wicket.Request;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Response;
 import org.apache.wicket.Session;
+import org.apache.wicket.markup.html.AjaxServerAndClientTimeFilter;
 import org.apache.wicket.markup.html.pages.ExceptionErrorPage;
 import org.apache.wicket.protocol.http.HttpSessionStore;
 import org.apache.wicket.protocol.http.WebApplication;

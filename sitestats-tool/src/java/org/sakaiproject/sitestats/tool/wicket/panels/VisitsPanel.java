@@ -81,7 +81,7 @@ public class VisitsPanel extends Panel {
 		lastWeekLink = new IndicatingAjaxLink("lastWeekLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_WEEK);
+				setSelectedView(target, StatsManager.VIEW_WEEK);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 			}			
@@ -97,7 +97,7 @@ public class VisitsPanel extends Panel {
 		lastMonthLink = new IndicatingAjaxLink("lastMonthLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_MONTH);
+				setSelectedView(target, StatsManager.VIEW_MONTH);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 			}
@@ -113,7 +113,7 @@ public class VisitsPanel extends Panel {
 		lastYearLink = new IndicatingAjaxLink("lastYearLink") {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				setSelectedView(StatsManager.VIEW_YEAR);
+				setSelectedView(target, StatsManager.VIEW_YEAR);
 				target.addComponent(selectors);
 				target.addComponent(chart);
 			}
@@ -222,7 +222,7 @@ public class VisitsPanel extends Panel {
 		return selectedView;
 	}
 
-	public final void setSelectedView(String selectedView) {
+	public final void setSelectedView(AjaxRequestTarget target, String selectedView) {
 		this.selectedView = selectedView;
 		
 		boolean inLastWeek = StatsManager.VIEW_WEEK.equals(selectedView);
@@ -234,7 +234,7 @@ public class VisitsPanel extends Panel {
 		lastMonthLabel.setVisible(inLastMonth);
 		lastYearLink.setVisible(!inLastYear);
 		lastYearLabel.setVisible(inLastYear);
-		chart.renderImage();
+		chart.renderImage(target);
 	}
 
 	public void setChartSize(int width, int height, int maximizedWidth, int maximizedHeight) {

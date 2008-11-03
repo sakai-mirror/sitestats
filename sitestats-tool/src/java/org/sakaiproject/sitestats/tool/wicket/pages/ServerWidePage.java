@@ -229,7 +229,7 @@ public class ServerWidePage extends BasePage {
 				reportTitle.add(new AttributeModifier("style", true, new Model("display: block")));
 				reportDescription.add(new AttributeModifier("style", true, new Model("display: block")));
 				reportNotes.add(new AttributeModifier("style", true, new Model("display: block")));
-				reportChart.renderImage();
+				reportChart.renderImage(target);
 				// toggle selectors link state
 				for(Component lbl : labels.values()) {
 					lbl.setVisible(false);
