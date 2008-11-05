@@ -70,6 +70,7 @@ import org.sakaiproject.sitestats.tool.wicket.models.ReportParamsModel;
 import org.sakaiproject.sitestats.tool.wicket.models.ToolModel;
 import org.sakaiproject.user.api.User;
 import org.sakaiproject.user.api.UserNotDefinedException;
+import org.sakaiproject.util.Web;
 
 /**
  * @author Nuno Fernandes
@@ -344,10 +345,12 @@ public class ReportsPage extends BasePage {
 		who.add(new Radio("who-none", new Model("who-none")));	
 		
 		// users (part 2)
+		selectOptionsRV.setEscapeModelStrings(true);
 		whoUserIds.add(selectOptionsRV);
 		whoUserIds.add(new AttributeModifier("title", true, new ResourceModel("report_multiple_sel_instruction")));
 		whoUserIds.setOutputMarkupId(true);
 		whoUserIds.setOutputMarkupPlaceholderTag(true);
+		whoUserIds.setEscapeModelStrings(true);
 		who.add(whoUserIds);
 		
 		// roles
@@ -555,7 +558,9 @@ public class ReportsPage extends BasePage {
 			Iterator<String> i = siteUsers.iterator();
 			while(i.hasNext()){
 				String userId = i.next();
-				users.add( new SelectOption("option", new Model(userId)) );
+				SelectOption opt = new SelectOption("option", new Model(userId));
+				opt.setEscapeModelStrings(true);
+				users.add(opt);
 			}		
 			WebMarkupContainer optgroupItem = new WebMarkupContainer(rv.newChildId());
 			rv.add(optgroupItem);
@@ -575,7 +580,7 @@ public class ReportsPage extends BasePage {
 					buff.append(" (");
 					buff.append(u.getDisplayId());
 					buff.append(")");
-					return buff.toString();
+					return Web.escapeHtml(buff.toString());
 				}
 				public IModel getModel(Object value) {
 					SelectOption opt = (SelectOption) value;

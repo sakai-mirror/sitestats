@@ -65,7 +65,8 @@ public class Menu extends Panel {
 		
 		// Admin page
 		boolean adminPageVisible = 
-			facade.getStatsAuthz().isUserAbleToViewSiteStatsAdmin(siteId);
+			facade.getStatsAuthz().isUserAbleToViewSiteStatsAdmin(siteId)
+			&& facade.getToolManager().getCurrentTool().getId().equals("sakai.sitestats.admin");
 		MenuItem adminPage = new MenuItem("adminPage", new ResourceModel("menu_sitelist"), AdminPage.class, pageParameters, adminPageVisible);
 		/*if(adminPageVisible) {
 			adminPage.add(new AttributeModifier("class", true, new Model("firstToolBarItem")));
