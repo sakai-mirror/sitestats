@@ -116,15 +116,7 @@
                                             <br/>
                                             <select wicket:id="reportParams.whatResourceAction" onclick="checkWhatSelection();" class="whatResourceAction"/>
                                             <br/>
-                                            <div id="what-resources-select-container" style="overflow:auto; width: 304px; height: 147px;">
-	                                            <select wicket:id="reportParams.whatResourceIds" style="width:304px" size="8" multiple="multiple" onclick="checkWhatSelection();" class="whatResourceIds" name="whatResourceIds">
-		                                            <span wicket:id="selectOptionsRV3">
-		                                                <span wicket:id="selectOptions">
-		                                                    <option wicket:id="option"></option>
-		                                                </span>
-		                                           </span>
-		                                        </select>
-	                                        </div>
+                                            <span wicket:id="reportParams.whatResourceIds" class="whatResourceIds" name="whatResourceIds"></span>
                                         </span>
                                      </td>
                                  </tr>
@@ -259,7 +251,7 @@
                 
                 <!-- BUTTONS -->
                 <p class="act">
-                    <input type="submit" wicket:id="generateReport" wicket:message="value:report_generate" class="active"/>
+                    <input type="submit" wicket:id="generateReport" wicket:message="value:report_generate" class="active generateReport"/>
                 </p>
 		    </form>
 		</wicket:extend>

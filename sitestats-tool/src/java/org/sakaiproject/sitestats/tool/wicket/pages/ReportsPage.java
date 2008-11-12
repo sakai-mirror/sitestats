@@ -18,7 +18,6 @@ import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.datetime.StyleDateConverter;
 import org.apache.wicket.datetime.markup.html.form.DateTextField;
-import org.apache.wicket.extensions.ajax.markup.html.WicketAjaxIndicatorAppender;
 import org.apache.wicket.extensions.markup.html.form.select.IOptionRenderer;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
@@ -43,9 +42,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.sakaiproject.authz.api.Role;
-import org.sakaiproject.content.api.ContentCollection;
-import org.sakaiproject.content.api.ContentResource;
-import org.sakaiproject.entity.api.ResourceProperties;
 import org.sakaiproject.exception.IdUnusedException;
 import org.sakaiproject.site.api.Group;
 import org.sakaiproject.site.api.Site;
@@ -59,12 +55,11 @@ import org.sakaiproject.sitestats.api.report.ReportManager;
 import org.sakaiproject.sitestats.api.report.ReportParams;
 import org.sakaiproject.sitestats.tool.facade.SakaiFacade;
 import org.sakaiproject.sitestats.tool.wicket.components.CSSFeedbackPanel;
-import org.sakaiproject.sitestats.tool.wicket.components.IndicatingAjaxCheckBox;
+import org.sakaiproject.sitestats.tool.wicket.components.FileSelectorPanel;
 import org.sakaiproject.sitestats.tool.wicket.components.IndicatingAjaxRadioGroup;
 import org.sakaiproject.sitestats.tool.wicket.components.LastJobRun;
 import org.sakaiproject.sitestats.tool.wicket.components.Menu;
 import org.sakaiproject.sitestats.tool.wicket.components.SelectOptionsGroup;
-import org.sakaiproject.sitestats.tool.wicket.models.CHResourceModel;
 import org.sakaiproject.sitestats.tool.wicket.models.EventModel;
 import org.sakaiproject.sitestats.tool.wicket.models.ReportParamsModel;
 import org.sakaiproject.sitestats.tool.wicket.models.ToolModel;
@@ -214,31 +209,10 @@ public class ReportsPage extends BasePage {
 		// right panel
 		// -------------------------------------------------------
 		// resources
-		final Select whatResourceIds = new Select("reportParams.whatResourceIds");
-		final RepeatingView selectOptionsRV3 = new RepeatingView("selectOptionsRV3");
-		whatResourceIds.add(selectOptionsRV3);
-		whatResourceIds.add(new AttributeModifier("title", true, new ResourceModel("report_multiple_sel_instruction")));
-		whatResourceIds.setEnabled(false);
-		whatResourceIds.setOutputMarkupId(true);
-		whatResourceIds.setOutputMarkupPlaceholderTag(true);
+		final FileSelectorPanel whatResourceIds = new FileSelectorPanel("reportParams.whatResourceIds", siteId);
 		what.add(whatResourceIds);
-		if(!reportParams.isWhatLimitedResourceIds()) {
-			what.add(new IndicatingAjaxCheckBox("reportParams.whatLimitedResourceIds") {
-				private static final long	serialVersionUID	= 1L;
-				@Override
-				protected void onUpdate(AjaxRequestTarget target) {
-					this.add(new AttributeModifier("onclick",true, new Model("checkWhatSelection()")));
-					addResources(selectOptionsRV3);
-					whatResourceIds.setEnabled(true);
-					target.addComponent(this);
-					target.addComponent(whatResourceIds);
-				}			
-			});
-		}else{
-			what.add(new CheckBox("reportParams.whatLimitedResourceIds"));
-			addResources(selectOptionsRV3);
-			whatResourceIds.setEnabled(true);			
-		}
+		what.add(new CheckBox("reportParams.whatLimitedResourceIds"));
+		whatResourceIds.setEnabled(true);
 		
 		// tools
 		Select whatToolIds = new Select("reportParams.whatToolIds");
@@ -491,55 +465,6 @@ public class ReportsPage extends BasePage {
 		}
 	}
 	
-	@SuppressWarnings("serial")
-	private void addResources(final RepeatingView rv) {
-		if(resourceLoaded) {
-			return;
-		}
-		ajaxUpdateLock.lock();
-		try{
-			List<SelectOption> resourcesList = new ArrayList<SelectOption>();
-			String siteCollectionId = facade.getContentHostingService().getSiteCollection(siteId);
-			List<ContentResource> rsrcs = facade.getContentHostingService().getAllResources(siteCollectionId);
-			Iterator<ContentResource> iR = rsrcs.iterator();
-			while(iR.hasNext()){
-				ContentResource cr = iR.next();
-				String path = StatsManager.SEPARATOR;
-				ContentCollection cc = cr.getContainingCollection();
-				while(cc != null && !cc.getId().equals(siteCollectionId) && !facade.getContentHostingService().isRootCollection(cc.getId())){
-					path = StatsManager.SEPARATOR + cc.getProperties().getProperty(ResourceProperties.PROP_DISPLAY_NAME) + path;
-					cc = cc.getContainingCollection();
-				}
-				// remove /group
-				path = path.replaceFirst(StatsManager.SEPARATOR + "group-user","[dropbox]");
-				path = path.replaceFirst(StatsManager.SEPARATOR + "group","");
-				path = path.replaceFirst(StatsManager.SEPARATOR + "attachment","[attachment]");
-				path = path.replaceFirst(StatsManager.SEPARATOR + "user","[workspace]");
-				path = path.replaceFirst(StatsManager.SEPARATOR + siteTitle,"");			
-				String crName = path + facade.getStatsManager().getResourceName("/content"+cr.getId());
-	
-				SelectOption opt = new SelectOption("option", new CHResourceModel(cr.getId(), crName));
-				resourcesList.add(opt);
-			}
-			
-			WebMarkupContainer optgroupItem = new WebMarkupContainer(rv.newChildId());
-			rv.add(optgroupItem);
-			SelectOptions selectOptions = new SelectOptions("selectOptions", resourcesList, new IOptionRenderer() {
-				public String getDisplayValue(Object object) {
-					SelectOption opt = (SelectOption) object;
-					return ((CHResourceModel) opt.getModel()).getResourceName();
-				}
-				public IModel getModel(Object value) {
-					SelectOption opt = (SelectOption) value;
-					return new Model(((CHResourceModel) opt.getModel()).getResourceId());
-				}			
-			});
-			optgroupItem.add(selectOptions);
-			resourceLoaded = true;
-		}finally{
-			ajaxUpdateLock.unlock();
-		}
-	}
 	@SuppressWarnings("serial")
 	private void addUsers(final RepeatingView rv) {
 		if(usersLoaded) {

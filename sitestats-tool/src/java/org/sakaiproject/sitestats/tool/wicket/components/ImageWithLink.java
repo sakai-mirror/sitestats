@@ -20,6 +20,9 @@ public class ImageWithLink extends Panel {
 		super(id);
 		setRenderBodyOnly(false);
 		add( new ExternalImage("image", imgUrl) );
+		if(lnkUrl == null) {
+			lnkUrl = "#";
+		}
 		ExternalLink lnk = new ExternalLink("link", lnkUrl, lnkLabel);
 		if(lnkTarget != null) {
 			lnk.add(new AttributeModifier("target", true, new Model(lnkTarget)));
