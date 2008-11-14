@@ -208,6 +208,14 @@ public class ReportParamsBean implements ReportParams {
 	public void setWhoUserIds(List<String> whoUserIds) {
 		this.whoUserIds = whoUserIds;
 	}
+  public void setWhoUserIds(Object o) {
+		this.whoUserIds = new ArrayList<String>();
+		if(o != null) {
+			if(o instanceof String) {
+				this.whoUserIds.add((String) o);
+			}
+		}
+	}
 	
 	
 }

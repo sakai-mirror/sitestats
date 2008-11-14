@@ -58,4 +58,6 @@ public interface ReportParams {
 
 	public void setWhoUserIds(List<String> whoUserIds);
 
+	public void setWhoUserIds(Object whoUserIds);
+
 }

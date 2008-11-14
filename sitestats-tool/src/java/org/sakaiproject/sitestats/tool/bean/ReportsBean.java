@@ -325,6 +325,11 @@ public class ReportsBean {
 			lock.lock();
 			try{
 				siteUsers.clear();
+        // anonymous users
+        if(serviceBean.getSstStatsManager().isShowAnonymousAccessEvents()) {
+          siteUsers.add(new SelectItem("?", msgs.getString("user_anonymous_access")));
+        }
+        // site users
 				List<User> aUsers = serviceBean.getSiteUsers();
 				Iterator<User> iU = aUsers.iterator();
 				while(iU.hasNext()){
