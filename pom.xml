@@ -3,7 +3,7 @@
   <name>Sakai SiteStats</name>
   <groupId>org.sakaiproject</groupId>
   <artifactId>sitestats-base</artifactId>
-  <version>M2</version><!-- sitestats.version --> 
+  <version>1.2.1</version><!-- sitestats.version --> 
   
   <description>SiteStats is a tool for Sakai for showing site usage statistics.</description>
   <url>http://bugs.sakaiproject.org/confluence/display/STAT</url>

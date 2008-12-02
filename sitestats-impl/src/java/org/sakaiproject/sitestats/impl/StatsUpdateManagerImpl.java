@@ -405,7 +405,9 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 			
 			// user check
 			if(userId == null) userId = M_uss.getSession(e.getSessionId()).getUserId();
-			if(!isCollectAdminEvents() && userId.equals("admin")){
+			if(!isCollectAdminEvents() && ("admin").equals(userId)){
+				return;
+			}if(!M_sm.isShowAnonymousAccessEvents() && ("?").equals(userId)){
 				return;
 			}
 
@@ -607,9 +609,19 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				c.add(Expression.eq("date", eUpdate.getDate()));
 				try{
 					eExisting = (EventStat) c.uniqueResult();
-				}catch(Exception ex){
-					LOG.debug("More than 1 result when unique result expected.", ex);
-					eExisting = (EventStat) c.list().get(0);
+				}catch(HibernateException ex){
+					List events = c.list();
+					if ((events!=null) && (events.size()>0)){
+						LOG.debug("More than 1 result when unique result expected.", ex);
+						eExisting = (EventStat) c.list().get(0);
+					}else{
+						LOG.debug("No result found", ex);
+						eExisting = null;
+					}
+				}catch(Exception ex2){
+					LOG.debug("Probably ddbb error when loading data at java object", ex2);
+					System.out.println("Probably ddbb error when loading data at java object!!!!!!!!");
+					
 				}
 				if(eExisting == null) 
 					eExisting = eUpdate;
@@ -642,9 +654,19 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				c.add(Expression.eq("date", eUpdate.getDate()));
 				try{
 					eExisting = (ResourceStat) c.uniqueResult();
-				}catch(Exception ex){
-					LOG.debug("More than 1 result when unique result expected.", ex);
-					eExisting = (ResourceStat) c.list().get(0);
+				}catch(HibernateException ex){
+					List events = c.list();
+					if ((events!=null) && (events.size()>0)){
+						LOG.debug("More than 1 result when unique result expected.", ex);
+						eExisting = (ResourceStat) c.list().get(0);
+					}else{
+						LOG.debug("No result found", ex);
+						eExisting = null;
+					}
+				}catch(Exception ex2){
+					LOG.debug("Probably ddbb error when loading data at java object", ex2);
+					System.out.println("Probably ddbb error when loading data at java object!!!!!!!!");
+					
 				}
 				if(eExisting == null) 
 					eExisting = eUpdate;
@@ -674,9 +696,19 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				c.add(Expression.eq("date", eUpdate.getDate()));
 				try{
 					eExisting = (SiteActivity) c.uniqueResult();
-				}catch(Exception ex){
-					LOG.debug("More than 1 result when unique result expected.", ex);
-					eExisting = (SiteActivity) c.list().get(0);
+				}catch(HibernateException ex){
+					List events = c.list();
+					if ((events!=null) && (events.size()>0)){
+						LOG.debug("More than 1 result when unique result expected.", ex);
+						eExisting = (SiteActivity) c.list().get(0);
+					}else{
+						LOG.debug("No result found", ex);
+						eExisting = null;
+					}
+				}catch(Exception ex2){
+					LOG.debug("Probably ddbb error when loading data at java object", ex2);
+					System.out.println("Probably ddbb error when loading data at java object!!!!!!!!");
+					
 				}
 				if(eExisting == null) 
 					eExisting = eUpdate;
@@ -706,9 +738,19 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				c.add(Expression.eq("date", eUpdate.getDate()));
 				try{
 					eExisting = (SiteVisits) c.uniqueResult();
-				}catch(Exception ex){
-					LOG.debug("More than 1 result when unique result expected.", ex);
-					eExisting = (SiteVisits) c.list().get(0);
+				}catch(HibernateException ex){
+					List events = c.list();
+					if ((events!=null) && (events.size()>0)){
+						LOG.debug("More than 1 result when unique result expected.", ex);
+						eExisting = (SiteVisits) c.list().get(0);
+					}else{
+						LOG.debug("No result found", ex);
+						eExisting = null;
+					}
+				}catch(Exception ex2){
+					LOG.debug("Probably ddbb error when loading data at java object", ex2);
+					System.out.println("Probably ddbb error when loading data at java object!!!!!!!!");
+					
 				}
 				if(eExisting == null){
 					eExisting = eUpdate;
