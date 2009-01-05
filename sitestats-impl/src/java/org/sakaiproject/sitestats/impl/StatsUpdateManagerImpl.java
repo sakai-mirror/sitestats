@@ -844,8 +844,12 @@ public class StatsUpdateManagerImpl extends HibernateDaoSupport implements Runna
 				}else if(parts[2].equals("group-user")){
 					// drop-box
 					if(parts.length <= 5) return false;
-				}
-			}catch(Exception ex){
+				}else if ((parts.length >= 3) && (parts[2].equals("private"))) {
+          // discard
+					LOG.debug("Discarding content event in private area.");
+					return false;
+        }
+      }catch(Exception ex){
 				return false;
 			}
 		}
