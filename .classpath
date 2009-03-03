@@ -6,6 +6,8 @@
 	<classpathentry excluding="**" kind="src" output="sitestats-impl-hib/target/classes" path="sitestats-impl-hib/src/resources"/>
 	<classpathentry kind="src" output="sitestats-impl/target/classes" path="sitestats-impl/src/java"/>
 	<classpathentry excluding="**" kind="src" output="sitestats-impl/target/classes" path="sitestats-bundles"/>
+	<classpathentry kind="src" output="sitestats-impl/target/test-classes" path="sitestats-impl/src/test"/>
+	<classpathentry excluding="**" kind="src" output="sitestats-impl/target/test-classes" path="sitestats-pack/src/webapp/WEB-INF"/>
 	<classpathentry kind="src" output="sitestats-tool/target/classes" path="sitestats-tool/src/java"/>
 	<classpathentry excluding="**" kind="src" output="sitestats-tool/target/classes" path="sitestats-tool/src/webapp"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
