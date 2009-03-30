@@ -489,7 +489,7 @@ public class ReportManagerImpl implements ReportManager {
 						sMapped.setDate(s.getDate());
 					anonMap.put(eventId, sMapped);
 				}else{
-					s.setUserId(null);
+					s.setUserId("-");
 					anonMap.put(eventId, s);
 				}
 			}
