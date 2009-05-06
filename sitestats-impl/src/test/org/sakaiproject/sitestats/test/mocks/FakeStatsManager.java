@@ -258,6 +258,11 @@ public class FakeStatsManager implements StatsManager {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	public boolean isEnableResourceStats() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	public boolean isEventContextSupported() {
 		// TODO Auto-generated method stub
@@ -302,6 +307,11 @@ public class FakeStatsManager implements StatsManager {
 	public boolean setPreferences(String siteId, PrefsData prefsdata) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	public int getTotalResources(String siteId, boolean excludeFolders) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

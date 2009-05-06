@@ -20,16 +20,21 @@ public class FakeData {
 	public final static String					SITE_A_TARGET		= SITE_A_REF;
 	public final static String					SITE_B_ID			= "site-b-id";
 	public final static String					SITE_B_REF			= "/site/site-b-id";
+	public final static String					SITE_C_ID			= "site-c-id";
+	public final static String					SITE_C_REF			= "/site/site-c-id";
+	public final static int						SITE_C_USER_COUNT	= 2002;
 	
 	// USERs
 	public final static String					USER_A_ID			= "user-a";
 	public final static String					USER_B_ID			= "user-b";
+	public final static String					USER_ID_PREFIX		= "user-";
 
 	// TOOLs & EVENTs
 	public final static String					TOOL_CHAT			= "sakai.chat";
 	public final static String					EVENT_CHATNEW		= "chat.new";
 	public final static String					EVENT_CONTENTNEW	= "content.new";
 	public final static String					EVENT_CONTENTREV	= "content.revise";
+	public final static String					EVENT_CONTENTREAD	= "content.read";
 	// anonymous events
 	public final static String					EVENT_CONTENTDEL	= "content.delete";
 	
@@ -41,6 +46,7 @@ public class FakeData {
 	static{
 		EVENTIDS.add(EVENT_CHATNEW); 
 		EVENTIDS.add(EVENT_CONTENTNEW); 
+		EVENTIDS.add(EVENT_CONTENTREAD); 
 		EVENTIDS.add(EVENT_CONTENTREV); 
 		EVENTIDS.add(EVENT_CONTENTDEL); 
 	};
@@ -55,10 +61,14 @@ public class FakeData {
 
 		ToolInfo resources = new ToolInfo(StatsManager.RESOURCES_TOOLID);
 		resources.addEvent(new EventInfo(EVENT_CONTENTNEW));
+		resources.addEvent(new EventInfo(EVENT_CONTENTREAD));
 		resources.addEvent(new EventInfo(EVENT_CONTENTREV));
+		resources.addEvent(new EventInfo(EVENT_CONTENTDEL));
 		resources.setEventParserTip(new EventParserTip("contextId", "/", "3"));
 		EVENTID_TOOL_MAP.put(EVENT_CONTENTNEW, resources);
+		EVENTID_TOOL_MAP.put(EVENT_CONTENTREAD, resources);
 		EVENTID_TOOL_MAP.put(EVENT_CONTENTREV, resources);
+		EVENTID_TOOL_MAP.put(EVENT_CONTENTDEL, resources);
 		EVENT_REGISTRY.add(resources);
 		EVENT_REGISTRY_RES.add(resources);
 	}
