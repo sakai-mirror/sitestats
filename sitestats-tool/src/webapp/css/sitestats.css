@@ -1,5 +1,10 @@
 /** (NEW) Overview page */
 
+/** Sakai 2.5 requires this: */
+.navIntraTool li {
+    display:inline;
+}
+
 /** WIDGET *************** */
 /** STAT WIDGET: Top */
 .widget {

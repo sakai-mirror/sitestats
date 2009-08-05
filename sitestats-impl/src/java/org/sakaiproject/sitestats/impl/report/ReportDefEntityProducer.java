@@ -26,7 +26,7 @@ public class ReportDefEntityProducer implements EntityProducer, EntityTransferre
 	// --- Sakai services --------------------------------
 	
 	public void init() {
-		EntityManager.registerEntityProducer(this, ReportDefEntityProvider.REFERENCE_ROOT);
+		EntityManager.registerEntityProducer(this, "/sitestats-report" /*ReportDefEntityProvider.REFERENCE_ROOT*/);
 	}
 	
 	public void setReportManager(ReportManager reportManager) {
@@ -92,7 +92,7 @@ public class ReportDefEntityProducer implements EntityProducer, EntityTransferre
 	 * @see org.sakaiproject.entity.api.EntityProducer#getLabel()
 	 */
 	public String getLabel() {
-		return ReportDefEntityProvider.LABEL;
+		return "SiteStatsReport" /*ReportDefEntityProvider.LABEL*/;
 	}
 
 	/* (non-Javadoc)

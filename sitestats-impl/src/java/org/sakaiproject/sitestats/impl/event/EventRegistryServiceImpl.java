@@ -40,7 +40,7 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 
 	/** Event Registries */
 	private FileEventRegistry			fileEventRegistry			= null;
-	private EntityBrokerEventRegistry	entityBrokerEventRegistry	= null;
+	//private EntityBrokerEventRegistry	entityBrokerEventRegistry	= null;
 
 	/** Caching */
 	private Cache						eventRegistryCache			= null;
@@ -69,9 +69,9 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 		this.fileEventRegistry = fileEventRegistry;
 	}
 
-	public void setEntityBrokerEventRegistry(EntityBrokerEventRegistry ebEventRegistry) {
-		this.entityBrokerEventRegistry = ebEventRegistry;
-	}
+	//public void setEntityBrokerEventRegistry(EntityBrokerEventRegistry ebEventRegistry) {
+	//	this.entityBrokerEventRegistry = ebEventRegistry;
+	//}
 	
 	public void setCheckLocalEventNamesFirst(boolean checkLocalEventNamesFirst) {
 		this.checkLocalEventNamesFirst = checkLocalEventNamesFirst;
@@ -158,17 +158,17 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 		String eventName = null;
 		EventRegistry firstEr = null;
 		EventRegistry secondEr = null;
-		if(checkLocalEventNamesFirst) {
+		if(true /*checkLocalEventNamesFirst*/) {
 			firstEr = fileEventRegistry;
-			secondEr = entityBrokerEventRegistry;
+			//secondEr = entityBrokerEventRegistry;
 		}else{
-			firstEr = entityBrokerEventRegistry;
-			secondEr = fileEventRegistry;
+			//firstEr = entityBrokerEventRegistry;
+			//secondEr = fileEventRegistry;
 		}
 		eventName = firstEr.getEventName(eventId);
-		if(eventName == null) {
-			eventName = secondEr.getEventName(eventId);
-		}
+		//if(eventName == null) {
+		//	eventName = secondEr.getEventName(eventId);
+		//}
 		if(eventName == null) {
 			LOG.warn("Missing resource bundle for event id: "+eventId);
 			eventName = eventId;
@@ -333,7 +333,7 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 			// Second: add EntityBroker Event Registry, 
 			//         replacing events for tools found on this Registry
 			//         (but keeping the anonymous flag for events in both Registries)
-			eventRegistry = EventUtil.addToEventRegistry(entityBrokerEventRegistry.getEventRegistry(), true, eventRegistry);
+			//eventRegistry = EventUtil.addToEventRegistry(entityBrokerEventRegistry.getEventRegistry(), true, eventRegistry);
 			
 			// Cache Event Registry
 			eventRegistryCache.put(CACHENAME_EVENTREGISTRY, eventRegistry);
@@ -344,8 +344,8 @@ public class EventRegistryServiceImpl implements EventRegistry, EventRegistrySer
 	
 	/** Check if any of the entity registries has expired. */
 	private boolean areEventRegistriesExpired() {
-		return fileEventRegistry.isEventRegistryExpired()
-			|| entityBrokerEventRegistry.isEventRegistryExpired();
+		return fileEventRegistry.isEventRegistryExpired();
+			//|| entityBrokerEventRegistry.isEventRegistryExpired();
 	}
 
 }

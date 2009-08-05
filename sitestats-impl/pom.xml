@@ -26,7 +26,7 @@
       <!-- Binds to Sakai Kernel K1 - for Sakai 2.6.0+ -->
       <id>K1</id>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
       <dependencies>
         <dependency>
@@ -47,7 +47,7 @@
       <!-- Binds to Sakai pre Kernel K1 - for Sakai 2.4.x/2.5.x -->
       <id>pre-K1</id>
       <activation>
-        <activeByDefault>false</activeByDefault>
+        <activeByDefault>true</activeByDefault>
       </activation>
       <dependencies>
         <dependency>
@@ -379,6 +379,16 @@
             "**/*Test.java" - includes all of its subdirectory and all java filenames that end with "Test".
             "**/*TestCase.java" - includes all of its subdirectory and all java filenames that end with "TestCase".
         -->
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/EntityBroker*.java</exclude>
+            <exclude>**/ReportDefEntityProvider.java</exclude>
+          </excludes>
+        </configuration>
       </plugin>
     </plugins>
     <testResources>
