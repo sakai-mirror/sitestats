@@ -6,7 +6,6 @@ import java.util.Observable;
 import java.util.Observer;
 
 import org.sakaiproject.event.api.Event;
-import org.sakaiproject.event.api.EventDelayHandler;
 import org.sakaiproject.event.api.EventTrackingService;
 import org.sakaiproject.event.api.UsageSession;
 import org.sakaiproject.time.api.Time;
@@ -62,7 +61,5 @@ public class FakeEventTrackingService extends Observable implements EventTrackin
 	public void post(Event e, User arg1) {
 		post(e);
 	}
-
-	public void setEventDelayHandler(EventDelayHandler arg0) {}
 
 }

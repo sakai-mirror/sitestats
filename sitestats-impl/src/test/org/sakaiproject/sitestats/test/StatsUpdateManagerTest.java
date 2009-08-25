@@ -117,7 +117,7 @@ public class StatsUpdateManagerTest extends AbstractAnnotationAwareTransactional
 		assertEquals(e1.getEvent(), es1.getEventId());
 		assertEquals(1, es1.getCount());
 		EventStat es2 = results.get(1);
-		assertEquals(e2.getContext(), es2.getSiteId());
+		assertEquals(e2.getResource().split("/")[3]/*e2.getContext()*/, es2.getSiteId());
 		assertEquals(e2.getUserId(), es2.getUserId());
 		assertEquals(e2.getEvent(), es2.getEventId());
 		assertEquals(1, es2.getCount());
