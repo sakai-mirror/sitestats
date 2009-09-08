@@ -58,6 +58,7 @@
   <!-- Project modules -->
   <modules>
     <module>sitestats-api</module>
+    <module>sitestats-bundle</module>
     <module>sitestats-impl</module>
     <module>sitestats-impl-hib</module>
     <module>sitestats-pack</module>
@@ -307,6 +308,11 @@
       <artifactId>sakai-sitestats-api</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.sakaiproject</groupId>
+      <artifactId>sakai-sitestats-bundle</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.sakaiproject</groupId>
