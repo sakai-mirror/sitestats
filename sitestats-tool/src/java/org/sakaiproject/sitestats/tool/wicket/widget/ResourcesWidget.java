@@ -566,9 +566,7 @@ public class ResourcesWidget extends Panel {
 				rp.setHowTotalsBy(Arrays.asList(StatsManager.T_USER));
 				rp.setHowSort(true);
 				rp.setHowSortBy(StatsManager.T_TOTAL);
-				rp.setHowSortAscending(false);	
-				rp.setHowLimitedMaxResults(true);
-				rp.setHowMaxResults(MAX_TABLE_ROWS);	
+				rp.setHowSortAscending(false);		
 				r.setReportParams(rp);
 				return r;
 			}
@@ -660,8 +658,6 @@ public class ResourcesWidget extends Panel {
 				rp.setHowSort(true);
 				rp.setHowSortBy(StatsManager.T_TOTAL);
 				rp.setHowSortAscending(false);
-				rp.setHowLimitedMaxResults(true);
-				rp.setHowMaxResults(MAX_TABLE_ROWS);
 				r.setReportParams(rp);
 				return r;
 			}
