@@ -644,7 +644,7 @@ public class ReportManagerImpl extends HibernateDaoSupport implements ReportMana
 		HSSFWorkbook wb = new HSSFWorkbook();
 		HSSFSheet sheet = wb.createSheet(sheetName);
 		HSSFRow headerRow = sheet.createRow((short) 0);
-
+		
 		// Add the column headers
 		int ix = 0;
 		if(isReportColumnAvailable(report.getReportDefinition().getReportParams(), StatsManager.T_USER)) {
@@ -754,7 +754,23 @@ public class ReportManagerImpl extends HibernateDaoSupport implements ReportMana
 				row.createCell((short) ix++).setCellValue(sv.getTotalUnique());				
 			}
 		}
-		return wb.getBytes();
+
+		ByteArrayOutputStream baos = null;
+		try{
+			baos = new ByteArrayOutputStream();
+			wb.write(baos);
+		}catch(IOException e){
+			LOG.error("Error writing Excel bytes from SiteStats report", e);
+		}finally{
+			if(baos != null) {
+				try{ baos.close(); }catch(IOException e){ /* ignore */ }
+			}
+		}
+		if(baos != null) {
+			return baos.toByteArray();
+		}else{
+			return new byte[0];
+		}
 	}
 
 	/* (non-Javadoc)

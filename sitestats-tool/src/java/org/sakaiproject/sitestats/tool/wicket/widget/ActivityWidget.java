@@ -499,8 +499,6 @@ public class ActivityWidget extends Panel {
 				rp.setHowSortBy(StatsManager.T_TOTAL);
 				rp.setHowChartType(StatsManager.CHARTTYPE_PIE);
 				rp.setHowChartSource(StatsManager.T_USER);
-				rp.setHowLimitedMaxResults(true);
-				rp.setHowMaxResults(MAX_TABLE_ROWS);
 				r.setReportParams(rp);
 				return r;
 			}
@@ -588,7 +586,6 @@ public class ActivityWidget extends Panel {
 				rp.setHowSortBy(StatsManager.T_TOTAL);
 				rp.setHowChartType(StatsManager.CHARTTYPE_PIE);
 				rp.setHowChartSource(StatsManager.T_TOOL);
-				rp.setHowLimitedMaxResults(true);
 				r.setReportParams(rp);
 				return r;
 			}
