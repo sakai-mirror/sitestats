@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Observable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,6 +17,7 @@ import org.sakaiproject.memory.api.Cache;
 import org.sakaiproject.memory.api.MemoryService;
 import org.sakaiproject.sitestats.api.event.EventInfo;
 import org.sakaiproject.sitestats.api.event.EventRegistry;
+import org.sakaiproject.sitestats.api.event.EventRegistryService;
 import org.sakaiproject.sitestats.api.event.ToolInfo;
 import org.sakaiproject.tool.api.SessionManager;
 import org.sakaiproject.user.api.Preferences;
@@ -23,13 +25,12 @@ import org.sakaiproject.user.api.PreferencesService;
 import org.sakaiproject.util.ResourceLoader;
 
 
-public class EntityBrokerEventRegistry implements EventRegistry, EntityProviderListener<Statisticable> {
+public class EntityBrokerEventRegistry extends Observable implements EventRegistry, EntityProviderListener<Statisticable> {
 	private static Log				LOG						= LogFactory.getLog(EntityBrokerEventRegistry.class);
 	private static final String		CACHENAME				= EntityBrokerEventRegistry.class.getName();
 
 	/** Event Registry members */
 	private List<ToolInfo>			eventRegistry			= new ArrayList<ToolInfo>();
-	private boolean					eventRegistryExpired	= true;
 	private Map<String, String>		eventIdToEPPrefix		= new HashMap<String, String>();
 
 	/** Caching */
@@ -80,7 +81,6 @@ public class EntityBrokerEventRegistry implements EventRegistry, EntityProviderL
 	 */
 	public List<ToolInfo> getEventRegistry() {
 		LOG.debug("getEventRegistry(): #tools implementing Statisticable = "+eventRegistry.size());
-		eventRegistryExpired = false;
 		return eventRegistry;
 	}
 	
@@ -88,7 +88,7 @@ public class EntityBrokerEventRegistry implements EventRegistry, EntityProviderL
 	 * @see org.sakaiproject.sitestats.api.event.EventRegistry#isEventRegistryExpired()
 	 */
 	public boolean isEventRegistryExpired() {
-		return eventRegistryExpired;
+		return hasChanged();
 	}
 	
 	/* (non-Javadoc)
@@ -161,7 +161,8 @@ public class EntityBrokerEventRegistry implements EventRegistry, EntityProviderL
 		eventRegistry.add(tool);
 
 		// Set expired flag on EventRegistry to true
-		eventRegistryExpired = true;
+		setChanged();
+		notifyObservers(EventRegistryService.NOTIF_EVENT_REGISTRY_EXPIRED);
 	}
 	
 
