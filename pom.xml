@@ -182,9 +182,9 @@
   
   <!-- Source code repository location -->
   <scm>
-    <connection>scm:svn:https://source.sakaiproject.org/contrib/ufp/sitestats/trunk</connection>
-    <developerConnection>scm:svn:https://source.sakaiproject.org/contrib/ufp/sitestats/trunk</developerConnection>
-    <url>http://source.sakaiproject.org/viewsvn/ufp/sitestats/?root=contrib</url>
+    <connection>scm:svn:https://source.sakaiproject.org/svn/sitestats/branches/sitestats_2-0-x_2.5.x</connection>
+    <developerConnection>scm:svn:https://source.sakaiproject.org/svn/sitestats/branches/sitestats_2-0-x_2.5.x</developerConnection>
+    <url>http://source.sakaiproject.org/viewsvn/sitestats/branches/sitestats_2-0-x_2.5.x</url>
   </scm>
   
   
