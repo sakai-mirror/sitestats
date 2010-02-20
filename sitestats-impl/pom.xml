@@ -65,16 +65,19 @@
     <dependency>
       <groupId>org.sakaiproject.entitybroker</groupId>
       <artifactId>entitybroker-api</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.sakaiproject.scheduler</groupId>
         <artifactId>scheduler-api</artifactId>
         <version>2.7.0-rc06</version>
+        <scope>provided</scope>
     </dependency>
 	<dependency>
         <groupId>org.sakaiproject.scheduler</groupId>
         <artifactId>scheduler-component-shared</artifactId>
         <version>2.7.0-rc06</version>
+        <scope>provided</scope>
     </dependency>
     
     <!-- Spring & Hibernate -->
