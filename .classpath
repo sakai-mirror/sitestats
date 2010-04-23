@@ -4,7 +4,6 @@
 	<classpathentry excluding="**" kind="src" output="sitestats-api/target/classes" path="sitestats-api/src/config"/>
 	<classpathentry excluding="**" kind="src" output="sitestats-bundle/target/classes" path="sitestats-bundle/src/resources"/>
 	<classpathentry kind="src" output="sitestats-impl-hib/target/classes" path="sitestats-impl-hib/src/java"/>
-	<classpathentry excluding="**" kind="src" output="sitestats-impl-hib/target/classes" path="sitestats-impl-hib/src/resources"/>
 	<classpathentry kind="src" output="sitestats-impl/target/classes" path="sitestats-impl/src/java"/>
 	<classpathentry kind="src" output="sitestats-impl/target/test-classes" path="sitestats-impl/src/test"/>
 	<classpathentry excluding="**" kind="src" output="sitestats-impl/target/test-classes" path="sitestats-pack/src/webapp/WEB-INF"/>
