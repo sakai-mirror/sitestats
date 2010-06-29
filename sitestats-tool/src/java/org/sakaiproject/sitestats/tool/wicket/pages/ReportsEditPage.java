@@ -301,6 +301,7 @@ public class ReportsEditPage extends BasePage {
 		final Button back = new Button("back") {
 			@Override
 			public void onSubmit() {
+				reportDefModel.detach();
 				setResponsePage(returnPage);
 				super.onSubmit();
 			}
