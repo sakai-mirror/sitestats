@@ -120,15 +120,6 @@
         <url>http://source.sakaiproject.org/viewsvn/sitestats/branches/sitestats-2.3.x</url>
     </scm>
     
-    <!-- Distribution Management -->
-    <distributionManagement>
-        <site>
-            <id>sakai-site</id>
-            <name>Sakai release Site</name>
-            <url>scpexe://source.sakaiproject.org/var/www/html/release/sitestats/${project.version}</url>
-        </site>
-    </distributionManagement>
-    
     <!-- Project repositories -->
     <repositories>
         <repository>
