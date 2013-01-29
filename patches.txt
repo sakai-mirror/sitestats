@@ -1,1 +1,0 @@
-STAT-339 update web.xml to work with tomcat 7.0.35
