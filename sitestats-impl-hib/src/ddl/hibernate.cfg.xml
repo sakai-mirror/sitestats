@@ -12,5 +12,7 @@
         <mapping resource="org/sakaiproject/sitestats/impl/hbm/SiteActivityImpl.hbm.xml" />
         <mapping resource="org/sakaiproject/sitestats/impl/hbm/JobRunImpl.hbm.xml" />
         <mapping resource="org/sakaiproject/sitestats/impl/hbm/ReportDef.hbm.xml" />
+        <mapping resource="org/sakaiproject/sitestats/impl/hbm/ServerStat.hbm.xml" />
+        <mapping resource="org/sakaiproject/sitestats/impl/hbm/UserStat.hbm.xml" />
     </session-factory>
 </hibernate-configuration>

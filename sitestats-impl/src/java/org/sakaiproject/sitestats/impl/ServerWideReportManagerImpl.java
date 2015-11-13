@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *             http://www.osedu.org/licenses/ECL-2.0
+ *             http://www.opensource.org/licenses/ECL-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,8 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -41,6 +43,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
@@ -76,6 +79,7 @@ import org.jfree.data.time.Week;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.util.SortOrder;
+import org.sakaiproject.component.api.ServerConfigurationService;
 import org.sakaiproject.db.api.SqlReader;
 import org.sakaiproject.db.api.SqlService;
 import org.sakaiproject.event.api.UsageSessionService;
@@ -85,78 +89,210 @@ import org.sakaiproject.sitestats.api.StatsManager;
 import org.sakaiproject.util.ResourceLoader;
 
 /**
- * @author u4330369
+ * Server Wide Report Manager handles running the database queries for each of the server wide reports.
+ * 
+ * This currently provides limited support for the SST_ tables to be in a different database to the main Sakai database
+ * so long as the credentials and URL are the same (except for the db name). It will do a cross database join onto that db.
+ * 
+ * Configure via sakai.properties:
+ * sitestats.externalDb.name=DB_NAME
+ * 
+ * In addition to the normal settings for setting up external databases for the SST_ tables
  * 
  */
 public class ServerWideReportManagerImpl implements ServerWideReportManager
 {
-	/** Our log (commons). */
-	private static Log LOG = LogFactory
-			.getLog (ServerWideReportManagerImpl.class);
-
+	private static Log log = LogFactory.getLog(ServerWideReportManagerImpl.class);
 	/** Message bundle */
-	private static ResourceLoader	msgs								= new ResourceLoader("Messages");
+	private static ResourceLoader msgs = new ResourceLoader("Messages");
 		
-	/** Dependency: SqlService */
-	private SqlService m_sqlService = null;
+	private SqlService sqlService;
 	
-	/** Dependence: StatsManager */
-	private StatsManager M_sm = null;
+	public void setSqlService(SqlService sqlService){
+		this.sqlService = sqlService;
+	}
 	
-	public void setStatsManager (StatsManager statsManager)
-	{
-		this.M_sm = statsManager;
+	private StatsManager statsManager;
+	
+	public void setStatsManager(StatsManager statsManager){
+		this.statsManager = statsManager;
+	}
+	private UsageSessionService usageSessionService;
+	public void setUsageSessionService(UsageSessionService usageSessionService){
+		this.usageSessionService = usageSessionService;
+	}
+	
+	private ServerConfigurationService serverConfigurationService;
+	public void setServerConfigurationService(ServerConfigurationService serverConfigurationService){
+		this.serverConfigurationService = serverConfigurationService;
 	}
 
-	/**
-	 * Dependency: SqlService.
-	 * 
-	 * @param service
-	 *                The SqlService.
+	private String dbVendor;
+	private String externalDbName;
+
+	public void init (){
+		//setup the vendor
+		dbVendor = StringUtils.lowerCase(serverConfigurationService.getString("vendor@org.sakaiproject.db.api.SqlService", null));
+		log.info("ServerWideReportManagerImpl SQL queries configured to use: " + dbVendor);
+		
+		//setup the external db name for our cross db queries
+		externalDbName = serverConfigurationService.getString("sitestats.externalDb.name", null);
+		if(StringUtils.isNotBlank(externalDbName)){
+			log.info("ServerWideReportManagerImpl will query for Sitestats data in the external database: " + externalDbName);
+		} else {
+			log.info("ServerWideReportManagerImpl will query for Sitestats data in the main Sakai database");
+		}
+		
+	}
+
+	public void destroy (){}
+
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getMonthlyTotalLogins()
 	 */
-	public void setSqlService (SqlService service)
-	{
-		m_sqlService = service;
+	public List<ServerWideStatsRecord> getMonthlyTotalLogins() {
+		
+		String mysql = "select STR_TO_DATE(date_format(ACTIVITY_DATE, '%Y-%m-01'),'%Y-%m-%d') as period," +
+				" sum(ACTIVITY_COUNT) as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login'" +
+				" group by 1";
+		
+		String oracle = ("select TO_DATE(TO_CHAR(ACTIVITY_DATE, 'YYYY-MM-\"01\"'), 'YYYY-MM-DD') as period," +
+				" sum(ACTIVITY_COUNT) as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login'" +
+				" group by TO_DATE(TO_CHAR(ACTIVITY_DATE, 'YYYY-MM-\"01\"'), 'YYYY-MM-DD')");
+
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
+			public Object readSqlResultRecord (ResultSet result)
+			{
+				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
+				try {
+					info.add (result.getDate (1));
+					info.add (result.getLong (2));
+				}
+				catch (SQLException e) {
+					log.error("getMonthlyTotalLogins() exception: " + e.getClass() + ": " + e.getMessage());
+					return null;
+				}
+				return info;
+			}
+		});
+		
+		// remove the last entry, as it might not be a complete period
+		result.remove (result.size () - 1);
+
+		return result;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getMonthlyUniqueLogins()
+	 */
+	public List<ServerWideStatsRecord> getMonthlyUniqueLogins() {
+		
+		String mysql = "select STR_TO_DATE(date_format(LOGIN_DATE, '%Y-%m-01'),'%Y-%m-%d') as period," +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" group by 1";
+		
+		String oracle = "select TO_DATE(TO_CHAR(LOGIN_DATE, 'YYYY-MM-\"01\"'),'YYYY-MM-DD') as period," +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" group by TO_DATE(TO_CHAR(LOGIN_DATE, 'YYYY-MM-\"01\"'),'YYYY-MM-DD')";
+			 	
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
+			public Object readSqlResultRecord (ResultSet result)
+			{
+				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
+				try {
+					info.add (result.getDate (1));
+					info.add (result.getLong (2));
+				}
+				catch (SQLException e) {
+					log.error("getMonthlyUniqueLogins() exception: " + e.getClass() + ": " + e.getMessage());
+					return null;
+				}
+				return info;
+			}
+		});
+		
+		// remove the last entry, as it might not be a complete period
+		result.remove (result.size () - 1);
 
-	/** Dependency: UsageSessionService */
-	private UsageSessionService m_usageSessionService;
-
-	public void setUsageSessionService (UsageSessionService usageSessionService)
-	{
-		this.m_usageSessionService = usageSessionService;
-	}
-
-	public void init ()
-	{
-	}
-
-	public void destroy ()
-	{
+		return result;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getMonthlyLogin()
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getWeeklyTotalLogins()
 	 */
-	public List<ServerWideStatsRecord> getMonthlyLogin ()
-	{
-		String mySql = "select STR_TO_DATE(date_format(SESSION_START, '%Y-%m-01'),'%Y-%m-%d') as period, "
-				+ "count(*) as user_logins, "
-				+ "count(distinct SESSION_USER) as unique_users "
-				+ "from SAKAI_SESSION " + "group by 1";
-
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+	public List<ServerWideStatsRecord> getWeeklyTotalLogins() {
+		
+		
+		String mysql = "select STR_TO_DATE(concat(date_format(ACTIVITY_DATE, '%x-%v'), ' Monday'),'%x-%v %W') as week_start," +
+				" sum(ACTIVITY_COUNT) as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login'" +
+				" group by 1";
+		
+		String oracle = "select next_day(ACTIVITY_DATE - 7, 2) as week_start," +
+				" sum(ACTIVITY_COUNT) as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login'" +
+				" group by next_day(ACTIVITY_DATE - 7, 2)";
+		
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
 				try {
 					info.add (result.getDate (1));
 					info.add (result.getLong (2));
-					info.add (result.getLong (3));
 				}
 				catch (SQLException e) {
+					log.error("getWeeklyTotalLogins() exception: " + e.getClass() + ": " + e.getMessage());
+					return null;
+				}
+				return info;
+			}
+		});
+
+		// remove the last entry, as it might not be a complete period
+		result.remove (result.size () - 1);
+
+		return result;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getWeeklyUniqueLogins()
+	 */
+	public List<ServerWideStatsRecord> getWeeklyUniqueLogins() {
+		
+		String mysql = "select STR_TO_DATE(concat(date_format(LOGIN_DATE, '%x-%v'), ' Monday'),'%x-%v %W') as week_start," +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" group by 1";
+		
+		String oracle = "select next_day(LOGIN_DATE - 7, 2) as week_start," +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" group by next_day(LOGIN_DATE - 7, 2)";
+		
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
+			public Object readSqlResultRecord (ResultSet result)
+			{
+				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
+				try {
+					info.add (result.getDate (1));
+					info.add (result.getLong (2));
+				}
+				catch (SQLException e) {
+					log.error("getWeeklyUniqueLogins() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -171,25 +307,74 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getWeeklyLogin()
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getDailyTotalLogins()
 	 */
-	public List<ServerWideStatsRecord> getWeeklyLogin ()
-	{
-		String mySql = "select STR_TO_DATE(concat(date_format(SESSION_START, '%x-%v'), ' Monday'),'%x-%v %W') as week_start,"
-				+ " count(*) as user_logins, count(distinct SESSION_USER) as unique_users"
-				+ " from SAKAI_SESSION" + " group by 1";
-
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+	public List<ServerWideStatsRecord> getDailyTotalLogins() {
+		
+		String mysql = "select date(ACTIVITY_DATE) as session_date, " +
+				" ACTIVITY_COUNT as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login' " +
+				" and ACTIVITY_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY)" +
+				" group by 1";
+		
+		String oracle = "select trunc(ACTIVITY_DATE, 'DDD') as session_date," +
+				" sum(ACTIVITY_COUNT) as user_logins" +
+				" from " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS" +
+				" where EVENT_ID='user.login' " +
+				" and ACTIVITY_DATE > (SYSDATE - 90)" +
+				" group by trunc(ACTIVITY_DATE, 'DDD')";
+		
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
 				try {
 					info.add (result.getDate (1));
 					info.add (result.getLong (2));
-					info.add (result.getLong (3));
 				}
 				catch (SQLException e) {
+					log.error("getDailyTotalLogins() exception: " + e.getClass() + ": " + e.getMessage());
+					return null;
+				}
+				return info;
+			}
+		});
+
+		// remove the last entry, as it might not be a complete period
+		result.remove (result.size () - 1);
+
+		return result;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.sakaiproject.sitestats.api.ServerWideReportManager#getDailyUniqueLogins()
+	 */
+	public List<ServerWideStatsRecord> getDailyUniqueLogins() {
+		
+		String mysql = "select date(LOGIN_DATE) as session_date, " +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" where LOGIN_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY)" +
+				" group by 1";
+		
+		String oracle = "select trunc(LOGIN_DATE, 'DDD') as session_date, " +
+				" count(distinct user_id) as unique_users" +
+				" from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				" where LOGIN_DATE > (SYSDATE - 90)" +
+				" group by trunc(LOGIN_DATE, 'DDD')";
+		
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
+			public Object readSqlResultRecord (ResultSet result)
+			{
+				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
+				try {
+					info.add (result.getDate (1));
+					info.add (result.getLong (2));
+				}
+				catch (SQLException e) {
+					log.error("getDailyUniqueLogins() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -202,60 +387,50 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		return result;
 	}
 
-	public List<ServerWideStatsRecord> getDailyLogin ()
-	{
-		String mySql = "select date(SESSION_START) as session_date,"
-				+ " count(*) as user_logins,"
-				+ " count(distinct SESSION_USER) as unique_users"
-				+ " from SAKAI_SESSION" 
-				+ " where SESSION_START > DATE_SUB(CURDATE(), INTERVAL 90 DAY)"
-				+ " group by 1";
-
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
-			public Object readSqlResultRecord (ResultSet result)
-			{
-				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
-				try {
-					info.add (result.getDate (1));
-					info.add (result.getLong (2));
-					info.add (result.getLong (3));
-				}
-				catch (SQLException e) {
-					return null;
-				}
-				return info;
-			}
-		});
-
-		// remove the last entry, as it might not be a complete period
-		result.remove (result.size () - 1);
-
-		return result;
-	}
-
-	public List<ServerWideStatsRecord> getSiteCreatedDeletedStats (String period)
-	{
-		String sqlPeriod = "";
+	public List<ServerWideStatsRecord> getSiteCreatedDeletedStats(String period) {
+		String mysqlPeriod = "";
 		if (period.equals ("daily")) {
-			sqlPeriod = "date(EVENT_DATE) as event_period";
+			mysqlPeriod = "date(ACTIVITY_DATE) as event_period";
 		} else if (period.equals ("weekly")) {
-			sqlPeriod = "STR_TO_DATE(date_format(EVENT_DATE, '%x-%v Monday'),'%x-%v %W') as event_period";
+			mysqlPeriod = "STR_TO_DATE(date_format(ACTIVITY_DATE, '%x-%v Monday'),'%x-%v %W') as event_period";
 		} else {
 			// monthly
-			sqlPeriod = "STR_TO_DATE(date_format(EVENT_DATE, '%Y-%m-01'),'%Y-%m-%d') as event_period";
+			mysqlPeriod = "STR_TO_DATE(date_format(ACTIVITY_DATE, '%Y-%m-01'),'%Y-%m-%d') as event_period";
 		}
-		String mySql = "select " + sqlPeriod + ", "
-				+ "sum(if(event = 'site.add' && ref not regexp '/site/[~!]',1,0)) as site_created, "
-				+ "sum(if(event = 'site.del' && ref not regexp '/site/[~!]',1,0)) as site_deleted "
-				+ "FROM SAKAI_EVENT ";
+		String mysql = "select " + mysqlPeriod + ", "
+				+ "sum(if(EVENT_ID = 'site.add',activity_count,0)) as site_created, "
+				+ "sum(if(EVENT_ID = 'site.del',activity_count,0)) as site_deleted "
+				+ "FROM " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS ";
 		
 		if (period.equals ("daily")) {
-			mySql = mySql + "where EVENT_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
+			mysql = mysql + "where ACTIVITY_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
 		}
 		
-		mySql = mySql + "group by 1";
+		mysql = mysql + "group by 1";
+		
+		
+		String oraclePeriod = "";
+		if (period.equals ("daily")) {
+			oraclePeriod = "trunc(ACTIVITY_DATE, 'DDD')";
+		} else if (period.equals ("weekly")) {
+			oraclePeriod = "next_day(ACTIVITY_DATE - 7, 2)";
+		} else {
+			// monthly
+			oraclePeriod = "TO_DATE(TO_CHAR(ACTIVITY_DATE, 'YYYY-MM-\"01\"'),'YYYY-MM-DD')";
+		}
+	
+		String oracle = "select " + oraclePeriod + " as event_period, "
+				+ "sum(decode(EVENT_ID, 'site.add',activity_count,0)) as site_created, "
+				+ "sum(decode(EVENT_ID, 'site.del',activity_count,0)) as site_deleted "
+				+ "FROM " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS ";
+		
+		if (period.equals ("daily")) {
+			oracle = oracle + "where ACTIVITY_DATE > (SYSDATE - 90) ";
+		}	
+		oracle = oracle + "group by " + oraclePeriod;
+		
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -265,6 +440,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getLong (3));
 				}
 				catch (SQLException e) {
+					log.error("getSiteCreatedDeletedStats() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -272,31 +448,55 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		});
 
 		// remove the last entry, as it might not be a complete period
-		result.remove (result.size () - 1);
+		if(result.size() > 0) {
+			result.remove (result.size() - 1);
+		}
 		return result;
 	}
 
-	public List<ServerWideStatsRecord> getNewUserStats (String period)
+	public List<ServerWideStatsRecord> getNewUserStats(String period)
 	{
-		String sqlPeriod = "";
+		String mysqlPeriod = "";
 		if (period.equals ("daily")) {
-			sqlPeriod = "date(EVENT_DATE) as event_period";
+			mysqlPeriod = "date(ACTIVITY_DATE) as event_period";
 		} else if (period.equals ("weekly")) {
-			sqlPeriod = "STR_TO_DATE(date_format(EVENT_DATE, '%x-%v Monday'),'%x-%v %W') as event_period";
+			mysqlPeriod = "STR_TO_DATE(date_format(ACTIVITY_DATE, '%x-%v Monday'),'%x-%v %W') as event_period";
 		} else {
 			// monthly
-			sqlPeriod = "STR_TO_DATE(date_format(EVENT_DATE, '%Y-%m-01'),'%Y-%m-%d') as event_period";
+			mysqlPeriod = "STR_TO_DATE(date_format(ACTIVITY_DATE, '%Y-%m-01'),'%Y-%m-%d') as event_period";
 		}
-		String mySql = "select " + sqlPeriod + ", "
-				+ "sum(if(event = 'site.add' && ref regexp '/site/[~!]',1,0)) as new_user "
-				+ "FROM SAKAI_EVENT ";
+		String mysql = "select " + mysqlPeriod + ", "
+				+ " ACTIVITY_COUNT as new_user"
+				+ " FROM " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS"
+				+ " where EVENT_ID='user.add'";
+				
 
 		if (period.equals ("daily")) {
-			mySql = mySql + "where EVENT_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
+			mysql = mysql + " and ACTIVITY_DATE > DATE_SUB(CURDATE(), INTERVAL 90 DAY) ";
 		}
-		mySql = mySql + "group by 1";
+		mysql = mysql + " group by 1";
+		
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		String oraclePeriod = "";
+		if (period.equals ("daily")) {
+			oraclePeriod = "trunc(ACTIVITY_DATE, 'DDD')";
+		} else if (period.equals ("weekly")) {
+			oraclePeriod = "next_day(ACTIVITY_DATE - 7, 2)";
+		} else {
+			// monthly
+			oraclePeriod = "TO_DATE(TO_CHAR(ACTIVITY_DATE, 'YYYY-MM-\"01\"'),'YYYY-MM-DD')";
+		}
+		String oracle = "select " + oraclePeriod + " as event_period, "
+				+ " sum(ACTIVITY_COUNT) as new_user"
+				+ " FROM " + getExternalDbNameAsPrefix() + "SST_SERVERSTATS"
+				+ " where EVENT_ID='user.add'";
+	 	 
+		if (period.equals ("daily")) {
+			oracle = oracle + " AND ACTIVITY_DATE > (SYSDATE - 90) ";
+		}
+		oracle = oracle + " group by " + oraclePeriod;
+
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -305,6 +505,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getLong (2));
 				}
 				catch (SQLException e) {
+					log.error("getNewUserStats() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -312,25 +513,39 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		});
 
 		// remove the last entry, as it might not be a complete period
-		result.remove (result.size () - 1);
+		if(result.size () > 0){
+			result.remove (result.size () - 1);
+		}
 
 		return result;
 	}
 
-	public List<ServerWideStatsRecord> getTop20Activities ()
+	public List<ServerWideStatsRecord> getTop20Activities()
 	{
-		String mySql = "SELECT event, "
+		String mysql = "SELECT event_id, "
 				+ "sum(if(event_date > DATE_SUB(CURDATE(), INTERVAL 7 DAY),1,0))/7 as last7, "
 				+ "sum(if(event_date > DATE_SUB(CURDATE(), INTERVAL 30 DAY),1,0))/30 as last30, "
 				+ "sum(if(event_date > DATE_SUB(CURDATE(), INTERVAL 365 DAY),1,0))/365 as last365 "
-				+ "FROM SAKAI_EVENT "
-				+ "where event not in ('content.read', 'user.login', 'user.logout', 'pres.end', "
-				+ "'realm.upd', 'realm.add', 'realm.del', 'realm.upd.own') "
+				+ "FROM " + getExternalDbNameAsPrefix() + "SST_EVENTS "
+				+ "where event_id not in ('content.read', 'user.login', 'user.logout', 'pres.begin', 'pres.end', "
+				+ "'realm.upd', 'realm.add', 'realm.del', 'realm.upd.own', 'site.add', 'site.del', 'user.add', 'user.del') "
 				+ "and event_date > DATE_SUB(CURDATE(), INTERVAL 365 DAY) "
 				+ "group by 1 " + "order by 2 desc, 3 desc, 4 desc "
 				+ "LIMIT 20";
+		
+		String oracle = "select * from" +
+				" (SELECT event_id," +
+				" sum(decode(sign(event_date - (SYSDATE - 7)), 1, 1, 0)) / 7 as last7," +
+				" sum(decode(sign(event_date - (SYSDATE - 30)), 1, 1, 0)) / 30 as last30," +
+				" sum(decode(sign(event_date - (SYSDATE - 365)), 1, 1, 0)) / 365 as last365" +
+				" FROM " + getExternalDbNameAsPrefix() + "SST_EVENTS" +
+				" where event_id not in ('content.read', 'user.login', 'user.logout', 'pres.begin', 'pres.end', 'realm.upd', 'realm.add', 'realm.del', 'realm.upd.own', 'site.add', 'site.del', 'user.add', 'user.del')" +
+				" and event_date > (SYSDATE - 365)" +
+				" group by event_id" +
+				" order by last7 desc, last30 desc, last365 desc)" +
+				" where rownum <= 20";
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -341,6 +556,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getDouble (4));
 				}
 				catch (SQLException e) {
+					log.error("getTop20Activities() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -352,17 +568,29 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 	public List<ServerWideStatsRecord> getWeeklyRegularUsers ()
 	{
-		String mySql = "select s.week_start, sum(if(s.user_logins >= 5,1,0)) as five_plus, "
+		String mysql = "select s.week_start, sum(if(s.user_logins >= 5,1,0)) as five_plus, "
 				+ "sum(if(s.user_logins = 4,1,0)) as four, "
 				+ "sum(if(s.user_logins = 3,1,0)) as three, "
 				+ "sum(if(s.user_logins = 2,1,0)) as twice, "
 				+ "sum(if(s.user_logins = 1,1,0)) as once "
 				+ "from (select "
-				+ "STR_TO_DATE(concat(date_format(session_start, '%x-%v'), ' Monday'),'%x-%v %W') as week_start, "
-				+ "session_user, count(*) as user_logins "
-				+ "from SAKAI_SESSION group by 1, 2) as s " + "group by 1";
+				+ "STR_TO_DATE(concat(date_format(login_date, '%x-%v'), ' Monday'),'%x-%v %W') as week_start, "
+				+ "user_id, login_count as user_logins "
+				+ "from " + getExternalDbNameAsPrefix() + "SST_USERSTATS group by 1, 2) as s " + "group by 1";
+		
+		String oracle = "select s.week_start," +
+				" sum(decode(sign(s.user_logins - 4), 1, 1, 0)) as five_plus," +
+				" sum(decode(s.user_logins, 4, 1, 0)) as four, " +
+				" sum(decode(s.user_logins, 3, 1, 0)) as three, " +
+				" sum(decode(s.user_logins, 2, 1, 0)) as twice, " +
+				" sum(decode(s.user_logins, 1, 1, 0)) as once" +
+				" from (select next_day(LOGIN_DATE - 7, 2) as week_start," +
+				"       user_id, login_count as user_logins" +
+				"       from " + getExternalDbNameAsPrefix() + "SST_USERSTATS" +
+				"       group by next_day(LOGIN_DATE - 7, 2), user_id, login_count) s" +
+				" group by s.week_start";
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -375,6 +603,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getLong (6));
 				}
 				catch (SQLException e) {
+					log.error("getWeeklyRegularUsers() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -387,16 +616,26 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		return result;
 	}
 
+	// this has not been reimplemented in STAT-299 because the data is not tracked at an hourly level
+	// in any case, the data is only shown for a 30 day period so you could think about retaining the data for 30 days, perhaps.
 	public List<ServerWideStatsRecord> getHourlyUsagePattern ()
 	{
-		String mySql = "select date(SESSION_START) as session_date, "
+		String mysql = "select date(SESSION_START) as session_date, "
 				+ "hour(session_start) as hour_start, "
 				+ "count(distinct SESSION_USER) as unique_users "
 				+ "from SAKAI_SESSION "
 				+ "where SESSION_START > DATE_SUB(CURDATE(), INTERVAL 30 DAY) "
 				+ "group by 1, 2";
+		
+		String oracle = "select trunc(SESSION_START, 'DDD') as session_date," +
+				" to_number(to_char(session_start, 'HH24')) as hour_start," +
+				" count(distinct SESSION_USER) as unique_users" +
+				" from SAKAI_SESSION" +
+				" where SESSION_START > (SYSDATE - 30)" +
+				" group by trunc(SESSION_START, 'DDD'), to_number(to_char(session_start, 'HH24'))";
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		// This query uses only the main Sakai database, so do not specify the connection as it might be external
+		List result = sqlService.dbRead (getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -406,6 +645,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getLong (3));
 				}
 				catch (SQLException e) {
+					log.error("getHourlyUsagePattern() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -417,13 +657,20 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 	public List<ServerWideStatsRecord> getToolCount ()
 	{
-		String mySql = "SELECT registration, count(*) as site_count " +
+		String mysql = "SELECT registration, count(*) as site_count " +
 				"FROM SAKAI_SITE_TOOL " +
-				"where site_id regexp '^[[:digit:]]' " +
+				"where site_id not like '~%' and site_id not like '!%' " +
 				"group by 1 " +
 				"order by 2 desc";
+		
+		String oracle = "SELECT registration, count(*) as site_count" +
+				" FROM SAKAI_SITE_TOOL" +
+				" where site_id not like '~%' and site_id not like '!%'" +
+				" group by registration" +
+				" order by site_count desc";
 
-		List result = m_sqlService.dbRead (mySql, null, new SqlReader () {
+		// This query uses only the main Sakai database, so do not specify the connection as it might be external
+		List result = sqlService.dbRead(getSqlForVendor(mysql, oracle), null, new SqlReader () {
 			public Object readSqlResultRecord (ResultSet result)
 			{
 				ServerWideStatsRecord info = new ServerWideStatsRecordImpl ();
@@ -432,6 +679,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 					info.add (result.getInt (2));
 				}
 				catch (SQLException e) {
+					log.error("getToolCount() exception: " + e.getClass() + ": " + e.getMessage());
 					return null;
 				}
 				return info;
@@ -488,114 +736,124 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 
 	
-	private IntervalXYDataset getMonthlyLoginsDataSet ()
-	{
-		List<ServerWideStatsRecord> loginList = getMonthlyLogin ();
-		if (loginList == null) {
+	private IntervalXYDataset getMonthlyLoginsDataSet() {
+		
+		List<ServerWideStatsRecord> totalLogins = getMonthlyTotalLogins();
+		List<ServerWideStatsRecord> uniqueLogins = getMonthlyUniqueLogins();
+		if (totalLogins == null || uniqueLogins == null) {
 			return null;
 		}
 
-		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),
-				Month.class);
-		for (ServerWideStatsRecord login : loginList) {
+		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"), Month.class);
+		TimeSeries s2 = new TimeSeries (msgs.getString ("legend_unique_logins"), Month.class);
+		for (ServerWideStatsRecord login : totalLogins) {
 			Month month = new Month ((Date) login.get (0));
 			s1.add (month, (Long) login.get (1));
 		}
+		for (ServerWideStatsRecord login : uniqueLogins) {
+			Month month = new Month ((Date) login.get (0));
+			s2.add (month, (Long) login.get (1));
+		}
 
 		TimeSeriesCollection dataset = new TimeSeriesCollection ();
 		dataset.addSeries (s1);
+		dataset.addSeries (s2);
 
 		return dataset;
 	}
 
 	
-	private IntervalXYDataset getMonthlyUniqueLoginsDataSet ()
-	{
-		List<ServerWideStatsRecord> loginList = getMonthlyLogin ();
+	/*
+	private IntervalXYDataset getMonthlyLoginsDataSet() {
+		
+		List<ServerWideStatsRecord> loginList = getMonthlyUniqueLogins();
 		if (loginList == null) {
 			return null;
 		}
 
-		TimeSeries s2 = new TimeSeries (
-				msgs.getString ("legend_unique_logins"), Month.class);
+		TimeSeries s2 = new TimeSeries (msgs.getString ("legend_unique_logins"), Month.class);
 		for (ServerWideStatsRecord login : loginList) {
 			Month month = new Month ((Date) login.get (0));
-			s2.add (month, (Long) login.get (2));
+			s2.add (month, (Long) login.get (1));
 		}
 
 		TimeSeriesCollection dataset = new TimeSeriesCollection ();
+		dataset.addSeries (s2);
+
+		return dataset;
+	}
+	*/
+	
+	private IntervalXYDataset getWeeklyLoginsDataSet() {
+
+		List<ServerWideStatsRecord> totalLogins = getWeeklyTotalLogins();
+		List<ServerWideStatsRecord> uniqueLogins = getWeeklyUniqueLogins();
+		if (totalLogins == null || uniqueLogins == null) {
+			return null;
+		}
+
+		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),Week.class);
+		TimeSeries s2 = new TimeSeries (msgs.getString ("legend_unique_logins"), Week.class);
+		
+		for (ServerWideStatsRecord login : totalLogins) {
+			Week week = new Week ((Date) login.get (0));
+			s1.add (week, (Long) login.get (1));
+		}
+		
+		for (ServerWideStatsRecord login : uniqueLogins) {
+			Week week = new Week ((Date) login.get (0));
+			s2.add (week, (Long) login.get (1));
+		}
+
+		TimeSeriesCollection dataset = new TimeSeriesCollection();
+		dataset.addSeries (s1);
 		dataset.addSeries (s2);
 
 		return dataset;
 	}
 	
-	private IntervalXYDataset getWeeklyLoginsDataSet ()
-	{
-		// LOG.info("Generating activityWeekBarDataSet");
-		List<ServerWideStatsRecord> loginList = getWeeklyLogin ();
-		if (loginList == null) {
+
+	private IntervalXYDataset getDailyLoginsDataSet() {
+		
+		List<ServerWideStatsRecord> totalLogins = getDailyTotalLogins();
+		List<ServerWideStatsRecord> uniqueLogins = getDailyUniqueLogins();
+		if (totalLogins == null || uniqueLogins == null) {
 			return null;
 		}
 
-		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),
-				Week.class);
-		TimeSeries s2 = new TimeSeries (
-				msgs.getString ("legend_unique_logins"), Week.class);
-		for (ServerWideStatsRecord login : loginList) {
-			Week week = new Week ((Date) login.get (0));
-			s1.add (week, (Long) login.get (1));
-			s2.add (week, (Long) login.get (2));
-		}
-
-		TimeSeriesCollection dataset = new TimeSeriesCollection ();
-		dataset.addSeries (s1);
-		dataset.addSeries (s2);
-
-		return dataset;
-	}
-
-	private IntervalXYDataset getDailyLoginsDataSet ()
-	{
-		// LOG.info("Generating activityWeekBarDataSet");
-		List<ServerWideStatsRecord> loginList = getDailyLogin ();
-		if (loginList == null) {
-			return null;
-		}
-
-		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),
-				Day.class);
-		TimeSeries s2 = new TimeSeries (
-				msgs.getString ("legend_unique_logins"), Day.class);
-		for (ServerWideStatsRecord login : loginList) {
+		TimeSeries s1 = new TimeSeries (msgs.getString ("legend_logins"),Day.class);
+		TimeSeries s2 = new TimeSeries (msgs.getString ("legend_unique_logins"), Day.class);
+		for (ServerWideStatsRecord login : totalLogins) {
 			Day day = new Day ((Date) login.get (0));
 			s1.add (day, (Long) login.get (1));
-			s2.add (day, (Long) login.get (2));
+		}
+		
+		for (ServerWideStatsRecord login : uniqueLogins) {
+			Day day = new Day ((Date) login.get (0));
+			s2.add (day, (Long) login.get (1));
 		}
 
-		TimeSeriesCollection dataset = new TimeSeriesCollection ();
+		TimeSeriesCollection dataset = new TimeSeriesCollection();
 		dataset.addSeries (s1);
 		dataset.addSeries (s2);
 
-		TimeSeries mavS1 = MovingAverage.createMovingAverage (s1,
-				"7 day login moving average", 7, 7);
+		TimeSeries mavS1 = MovingAverage.createMovingAverage (s1, "7 day login moving average", 7, 7);
 		dataset.addSeries (mavS1);
 
-		TimeSeries mavS2 = MovingAverage.createMovingAverage (s2,
-				"7 day unique login moving average", 7, 7);
+		TimeSeries mavS2 = MovingAverage.createMovingAverage (s2, "7 day unique login moving average", 7, 7);
 		dataset.addSeries (mavS2);
 
 		return dataset;
 	}
+	
 
 	private IntervalXYDataset getMonthlySiteUserDataSet ()
 	{
 		List<ServerWideStatsRecord> siteCreatedDeletedList = getSiteCreatedDeletedStats ("monthly");
 		TimeSeriesCollection dataset = new TimeSeriesCollection ();
 		if (siteCreatedDeletedList != null) {
-			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), 
-					Month.class);
-			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), 
-					Month.class);
+			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), Month.class);
+			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), Month.class);
 			
 			for (ServerWideStatsRecord login : siteCreatedDeletedList) {
 				Month month = new Month ((Date) login.get (0));
@@ -609,8 +867,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		List<ServerWideStatsRecord> newUserList = getNewUserStats ("monthly");
 		if (newUserList != null) {
-			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"),
-					Month.class);
+			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"), Month.class);
 			
 			for (ServerWideStatsRecord login : newUserList) {
 				Month month = new Month ((Date) login.get (0));
@@ -629,10 +886,8 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		List<ServerWideStatsRecord> siteCreatedDeletedList = getSiteCreatedDeletedStats ("weekly");
 		TimeSeriesCollection dataset = new TimeSeriesCollection ();
 		if (siteCreatedDeletedList != null) {
-			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), 
-					Week.class);
-			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), 
-					Week.class);
+			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), Week.class);
+			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), Week.class);
 			
 			for (ServerWideStatsRecord login : siteCreatedDeletedList) {
 				Week week = new Week ((Date) login.get (0));
@@ -646,8 +901,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		List<ServerWideStatsRecord> newUserList = getNewUserStats ("weekly");
 		if (newUserList != null) {
-			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"),
-					Week.class);
+			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"), Week.class);
 			
 			for (ServerWideStatsRecord login : newUserList) {
 				Week week = new Week ((Date) login.get (0));
@@ -665,10 +919,8 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		List<ServerWideStatsRecord> siteCreatedDeletedList = getSiteCreatedDeletedStats ("daily");
 		TimeSeriesCollection dataset = new TimeSeriesCollection ();
 		if (siteCreatedDeletedList != null) {
-			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), 
-					Day.class);
-			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), 
-					Day.class);
+			TimeSeries s1 = new TimeSeries (msgs.getString ("legend_site_created"), Day.class);
+			TimeSeries s2 = new TimeSeries (msgs.getString ("legend_site_deleted"), Day.class);
 			
 			for (ServerWideStatsRecord login : siteCreatedDeletedList) {
 				Day day = new Day ((Date) login.get (0));
@@ -682,8 +934,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		List<ServerWideStatsRecord> newUserList = getNewUserStats ("daily");
 		if (newUserList != null) {
-			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"),
-					Day.class);
+			TimeSeries s3 = new TimeSeries (msgs.getString ("legend_new_user"), Day.class);
 			
 			for (ServerWideStatsRecord login : newUserList) {
 				Day day = new Day ((Date) login.get (0));
@@ -708,16 +959,11 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		for (ServerWideStatsRecord regularUsers : regularUsersList) {
 			Date weekStart = ((Date) regularUsers.get (0));
-			dataset.addValue ((Long) regularUsers.get (1), "5+", formatter
-					.format (weekStart));
-			dataset.addValue ((Long) regularUsers.get (2), "4", formatter
-					.format (weekStart));
-			dataset.addValue ((Long) regularUsers.get (3), "3", formatter
-					.format (weekStart));
-			dataset.addValue ((Long) regularUsers.get (4), "2", formatter
-					.format (weekStart));
-			dataset.addValue ((Long) regularUsers.get (5), "1", formatter
-					.format (weekStart));
+			dataset.addValue ((Long) regularUsers.get (1), "5+", formatter.format (weekStart));
+			dataset.addValue ((Long) regularUsers.get (2), "4", formatter.format (weekStart));
+			dataset.addValue ((Long) regularUsers.get (3), "3", formatter.format (weekStart));
+			dataset.addValue ((Long) regularUsers.get (4), "2", formatter.format (weekStart));
+			dataset.addValue ((Long) regularUsers.get (5), "1", formatter.format (weekStart));
 		}
 
 		return dataset;
@@ -725,7 +971,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 	private BoxAndWhiskerCategoryDataset getHourlyUsageDataSet ()
 	{
-		// LOG.info("Generating activityWeekBarDataSet");
+		// log.info("Generating activityWeekBarDataSet");
 		List<ServerWideStatsRecord> hourlyUsagePattern = getHourlyUsagePattern ();
 		if (hourlyUsagePattern == null) {
 			return null;
@@ -746,8 +992,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				prevDate = currDate;
 				totalDays++;
 			}
-			hourList[(Integer) regularUsers.get (1)].add ((Long) regularUsers
-					.get (2));
+			hourList[(Integer) regularUsers.get (1)].add ((Long) regularUsers.get (2));
 		}
 
 		for (int ii = 0; ii < 24; ii++) {
@@ -773,12 +1018,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		for (ServerWideStatsRecord regularUsers : topActivitiesList) {
 			String event = (String) regularUsers.get (0);
-			dataset.addValue ((Double) regularUsers.get (1), "last 7 days",
-					event);
-			dataset.addValue ((Double) regularUsers.get (2), "last 30 days",
-					event);
-			dataset.addValue ((Double) regularUsers.get (3), "last 365 days",
-					event);
+			dataset.addValue ((Double) regularUsers.get (1), "last 7 days", event);
+			dataset.addValue ((Double) regularUsers.get (2), "last 30 days", event);
+			dataset.addValue ((Double) regularUsers.get (3), "last 365 days", event);
 		}
 
 		return dataset;
@@ -796,8 +1038,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 
 		for (ServerWideStatsRecord regularUsers : toolCountList) {
 			String toolId = (String) regularUsers.get (0);
-			dataset.addValue ((Integer) regularUsers.get (1), "",
-					toolId);
+			dataset.addValue ((Integer) regularUsers.get (1), "", toolId);
 		}
 
 		return dataset;
@@ -806,9 +1047,8 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 	
 	private byte[] createMonthlyLoginChart (int width, int height)
 	{
-		IntervalXYDataset dataset1 = getMonthlyLoginsDataSet ();
-		IntervalXYDataset dataset2 = getMonthlyUniqueLoginsDataSet ();
-        IntervalXYDataset dataset3 = getMonthlySiteUserDataSet ();
+		IntervalXYDataset dataset1 = getMonthlyLoginsDataSet();
+        IntervalXYDataset dataset3 = getMonthlySiteUserDataSet();
 		
 		if ((dataset1 == null) || (dataset3 == null)) {
 			return generateNoDataChart(width, height);
@@ -816,13 +1056,11 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		
         // create plot ...
         XYItemRenderer renderer1 = new XYLineAndShapeRenderer(true, false);
-        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
 		renderer1.setSeriesPaint (0, Color.RED);
         
         DateAxis domainAxis = new DateAxis("");
-        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.MONTH, 1, 
-        		new SimpleDateFormat ("yyyy-MM")));
+        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.MONTH, 1, new SimpleDateFormat ("yyyy-MM")));
         domainAxis.setTickMarkPosition (DateTickMarkPosition.START);
         domainAxis.setVerticalTickLabels (true);
 		domainAxis.setLowerMargin (0.01);
@@ -839,6 +1077,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         plot1.setRangeGridlinePaint(Color.white);
         
         // AXIS 2
+        /*
         NumberAxis axis2 = new NumberAxis("Total Unique Users");
 		axis2.setStandardTickUnits (NumberAxis.createIntegerTickUnits ());
         axis2.setLabelPaint(Color.BLUE);
@@ -852,6 +1091,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
 		renderer2.setSeriesPaint (0, Color.BLUE);
         plot1.setRenderer(1, renderer2);
+        */
         
         // add a third dataset and renderer...
         XYItemRenderer renderer3 = new XYLineAndShapeRenderer(true, false);
@@ -868,8 +1108,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         axis1 = new NumberAxis("count");
 		axis1.setStandardTickUnits (NumberAxis.createIntegerTickUnits ());
 
-		XYPlot plot2 = new XYPlot(dataset3, null, axis1, 
-                renderer3);
+		XYPlot plot2 = new XYPlot(dataset3, null, axis1, renderer3);
         plot2.setBackgroundPaint(Color.lightGray);
         plot2.setDomainGridlinePaint(Color.white);
         plot2.setRangeGridlinePaint(Color.white);
@@ -888,7 +1127,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         chart.addSubtitle(legend);		
 		
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -903,7 +1142,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -920,16 +1159,13 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		
         // create plot ...
         XYItemRenderer renderer1 = new XYLineAndShapeRenderer(true, false);
-        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer1.setSeriesStroke(1, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-		renderer1.setSeriesPaint (0, Color.RED);
-		renderer1.setSeriesPaint (0, Color.BLUE);
+        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer1.setSeriesStroke(1, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+		renderer1.setSeriesPaint(0, Color.RED);
+		renderer1.setSeriesPaint(0, Color.BLUE);
         
         DateAxis domainAxis = new DateAxis("");
-        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.DAY, 7, 
-        		new SimpleDateFormat ("yyyy-MM-dd")));
+        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.DAY, 7, new SimpleDateFormat ("yyyy-MM-dd")));
         domainAxis.setTickMarkPosition (DateTickMarkPosition.START);
         domainAxis.setVerticalTickLabels (true);
 		domainAxis.setLowerMargin (0.01);
@@ -945,12 +1181,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         
         // add a second dataset and renderer...
         XYItemRenderer renderer2 = new XYLineAndShapeRenderer(true, false);
-        renderer2.setSeriesStroke(0, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer2.setSeriesStroke(1, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer2.setSeriesStroke(2, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(1, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(2, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
         renderer2.setSeriesPaint(0, Color.GREEN);
         renderer2.setSeriesPaint(1, Color.BLACK);
         renderer2.setSeriesPaint(2, Color.CYAN);
@@ -958,8 +1191,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         rangeAxis = new NumberAxis("count");
 		rangeAxis.setStandardTickUnits (NumberAxis.createIntegerTickUnits ());
 
-		XYPlot plot2 = new XYPlot(dataset2, null, rangeAxis, 
-                renderer2);
+		XYPlot plot2 = new XYPlot(dataset2, null, rangeAxis, renderer2);
         plot2.setBackgroundPaint(Color.lightGray);
         plot2.setDomainGridlinePaint(Color.white);
         plot2.setRangeGridlinePaint(Color.white);
@@ -972,13 +1204,12 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         cplot.setDomainGridlinesVisible(true);
 
         // return a new chart containing the overlaid plot...
-        JFreeChart chart = new JFreeChart(null, 
-                JFreeChart.DEFAULT_TITLE_FONT, cplot, false);
+        JFreeChart chart = new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, cplot, false);
         LegendTitle legend = new LegendTitle(cplot);
         chart.addSubtitle(legend);		
 		
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -993,15 +1224,15 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
 
 	private byte[] createDailyLoginChart (int width, int height)
 	{
-		IntervalXYDataset dataset1 = getDailyLoginsDataSet ();
-        IntervalXYDataset dataset2 = getDailySiteUserDataSet ();
+		IntervalXYDataset dataset1 = getDailyLoginsDataSet();
+        IntervalXYDataset dataset2 = getDailySiteUserDataSet();
 		
 		if ((dataset1 == null) || (dataset2 == null)) {
 			return generateNoDataChart(width, height);
@@ -1013,19 +1244,15 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		renderer1.setSeriesPaint (1, Color.BLUE);
 		renderer1.setSeriesPaint (2, Color.RED);
 		renderer1.setSeriesPaint (3, Color.BLUE);
-        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer1.setSeriesStroke(1, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-		BasicStroke dashLineStroke = new BasicStroke (2, BasicStroke.CAP_BUTT,
-				BasicStroke.JOIN_ROUND, 0, new float[] { 4 }, 0);
+        renderer1.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer1.setSeriesStroke(1, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+		BasicStroke dashLineStroke = new BasicStroke (2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 0, new float[] { 4 }, 0);
 		renderer1.setSeriesStroke (2, dashLineStroke);
 		renderer1.setSeriesStroke (3, dashLineStroke);
 		
         
         DateAxis domainAxis = new DateAxis("");
-        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.DAY, 7, 
-        		new SimpleDateFormat ("yyyy-MM-dd")));
+        domainAxis.setTickUnit (new DateTickUnit (DateTickUnit.DAY, 7, new SimpleDateFormat ("yyyy-MM-dd")));
         domainAxis.setTickMarkPosition (DateTickMarkPosition.START);
         domainAxis.setVerticalTickLabels (true);
 		domainAxis.setLowerMargin (0.01);
@@ -1041,12 +1268,9 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         
         // add a second dataset and renderer...
         XYItemRenderer renderer2 = new XYLineAndShapeRenderer(true, false);
-        renderer2.setSeriesStroke(0, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer2.setSeriesStroke(1, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
-        renderer2.setSeriesStroke(2, new BasicStroke(2.0f, 
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(0, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(1, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
+        renderer2.setSeriesStroke(2, new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL));
         renderer2.setSeriesPaint(0, Color.GREEN);
         renderer2.setSeriesPaint(1, Color.BLACK);
         renderer2.setSeriesPaint(2, Color.CYAN);
@@ -1054,8 +1278,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         rangeAxis = new NumberAxis("count");
 		rangeAxis.setStandardTickUnits (NumberAxis.createIntegerTickUnits ());
 
-		XYPlot plot2 = new XYPlot(dataset2, null, rangeAxis, 
-                renderer2);
+		XYPlot plot2 = new XYPlot(dataset2, null, rangeAxis, renderer2);
         plot2.setBackgroundPaint(Color.lightGray);
         plot2.setDomainGridlinePaint(Color.white);
         plot2.setRangeGridlinePaint(Color.white);
@@ -1068,13 +1291,12 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         cplot.setDomainGridlinesVisible(true);
 
         // return a new chart containing the overlaid plot...
-        JFreeChart chart = new JFreeChart(null, 
-                JFreeChart.DEFAULT_TITLE_FONT, cplot, false);
+        JFreeChart chart = new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, cplot, false);
         LegendTitle legend = new LegendTitle(cplot);
         chart.addSubtitle(legend);		
 		
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -1089,7 +1311,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1107,7 +1329,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				);
 
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -1150,7 +1372,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1161,7 +1383,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				null, dataset, false);
 
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -1189,7 +1411,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1207,7 +1429,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				);
 
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -1251,7 +1473,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1276,7 +1498,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		);
 		
 		// set background
-		chart.setBackgroundPaint (parseColor (M_sm.getChartBackgroundColor ()));
+		chart.setBackgroundPaint (parseColor (statsManager.getChartBackgroundColor ()));
 
 		// set chart border
 		chart.setPadding (new RectangleInsets (10, 5, 5, 5));
@@ -1308,7 +1530,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
         BarRenderer renderer = (BarRenderer) plot.getRenderer();
         CategoryItemLabelGenerator generator 
             = new StandardCategoryItemLabelGenerator("{1}", 
-                    NumberFormat.getInstance());
+                    NumberFormat.getInstance(new ResourceLoader().getLocale()));
         renderer.setBaseItemLabelGenerator(generator);
         renderer.setBaseItemLabelFont(new Font("SansSerif", Font.PLAIN, 9));
         renderer.setBaseItemLabelsVisible(true);
@@ -1320,7 +1542,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1329,7 +1551,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g2d = img.createGraphics();
 		
-		g2d.setBackground(parseColor(M_sm.getChartBackgroundColor()));
+		g2d.setBackground(parseColor(statsManager.getChartBackgroundColor()));
 		g2d.clearRect(0, 0, width-1, height-1);
 		g2d.setColor(parseColor("#cccccc"));
 		g2d.drawRect(0, 0, width-1, height-1);
@@ -1345,7 +1567,7 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 		try{
 			ImageIO.write(img, "png", out);
 		}catch(IOException e){
-			LOG.warn("Error occurred while generating SiteStats chart image data", e);
+			log.warn("Error occurred while generating SiteStats chart image data", e);
 		}
 		return out.toByteArray();
 	}
@@ -1379,7 +1601,36 @@ public class ServerWideReportManagerImpl implements ServerWideReportManager
 				if(color.equalsIgnoreCase("white")) return Color.white;
 			}
 		}
-		LOG.info("Unable to parse body background-color (color:" + color+"). Assuming white.");
+		log.info("Unable to parse body background-color (color:" + color+"). Assuming white.");
 		return Color.white;
 	}
+	
+	/**
+	 * Helper method to return the appropriate SQL for the DB vendor
+	 * Everything should be lowercase.
+	 * @return
+	 */
+	private String getSqlForVendor(String mysql, String oracle) {
+		if(StringUtils.equals(dbVendor, "mysql")){
+			return mysql;
+		}
+		if(StringUtils.equals(dbVendor, "oracle")){
+			return oracle;
+		}
+		return null;
+	}
+	
+	/**
+	 * Helper to get the externalDbName as a prefix to be used directly in queries, . is appended
+	 * If its not configured, then an empty string is returned so that whatever this returns can be used as-is
+	 * @return
+	 */
+	private String getExternalDbNameAsPrefix() {
+		if(StringUtils.isNotBlank(externalDbName)) {
+			return externalDbName+".";
+		} else {
+			return "";
+		}
+	}
+	
 }
