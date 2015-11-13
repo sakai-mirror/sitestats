@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *             http://www.opensource.org/licenses/ECL-2.0
+ *             http://www.osedu.org/licenses/ECL-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,50 +29,28 @@ public interface ServerWideReportManager
     
     
     /**
-     * Get total login activity statistics grouped by month.
+     * Get site login activity statistics grouped by month.
      * 
      * @return a list of login statistics. 
-     * 		format: String yyyy-mm, Total Logins,
+     * 		format: String yyyy-mm, Total Logins, Total Unique Logins
      */
-    public List<ServerWideStatsRecord> getMonthlyTotalLogins();
+    public List<ServerWideStatsRecord> getMonthlyLogin ();
     
     /**
-     * Get unique login activity statistics grouped by month.
-     * 
-     * @return a list of login statistics. 
-     * 		format: String yyyy-mm, Total Unique Logins
-     */
-    public List<ServerWideStatsRecord> getMonthlyUniqueLogins();
-    
-    /**
-     * Get total login activity statistics grouped by week.
+     * Get site login activity statistics grouped by week.
      * 
      * @return a list of login statistics where date is the Monday's of the
      *         week. format: Date, Total Logins, Total Unique Logins
      */
-    public List<ServerWideStatsRecord> getWeeklyTotalLogins();
-    
-    /**
-     * Get unique login activity statistics grouped by week.
-     * 
-     * @return a list of login statistics where date is the Monday's of the
-     *         week. format: Date, Total Logins
-     */
-    public List<ServerWideStatsRecord> getWeeklyUniqueLogins();
+    public List<ServerWideStatsRecord> getWeeklyLogin ();
 
     /**
-     * Get total login activity statistics grouped by day.
+     * Get site login activity statistics grouped by day.
      * 
-     * @return a list of login statistics. format: Date, Total Logins
+     * @return a list of login statistics. format: Date, Total Logins, Total
+     *         Unique Logins
      */
-    public List<ServerWideStatsRecord> getDailyTotalLogins();
-    
-    /**
-     * Get unique login activity statistics grouped by day.
-     * 
-     * @return a list of login statistics. format: Date, Total Unique Logins
-     */
-    public List<ServerWideStatsRecord> getDailyUniqueLogins();
+    public List<ServerWideStatsRecord> getDailyLogin ();
 
     /**
      * Get site site created or deleted per time period.
